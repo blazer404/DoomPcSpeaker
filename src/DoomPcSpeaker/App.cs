@@ -191,9 +191,19 @@ static class App
 
         // headers/info
         if (availabilityError is null)
-            Ui.Dim("  :: playlist hidden  ::  cmd: list help cls stop  ::  input: id/key/name/random  ::  queue: , ; space  ::  exit: 0/q");
+        {
+            Ui.Dim("  playlist :: hidden (use 'list')");
+            Ui.Dim("  cmd      :: list, help, cls, stop");
+            Ui.Dim("  input    :: id / key / name / random");
+            Ui.Dim("  queue    :: separate with ',' ';' or space");
+            Ui.Dim("  exit     :: 0 / q");
+        }
         else
-            Ui.Dim("  :: playback disabled  ::  allowed: list, help, cls, stop, 0/q  ::  fix driver/access and restart");
+        {
+            Ui.Dim("  mode     :: playback disabled");
+            Ui.Dim("  allowed  :: list, help, cls, stop, 0/q");
+            Ui.Dim("  fix      :: restore driver/access and restart");
+        }
 
         Console.WriteLine();
 
