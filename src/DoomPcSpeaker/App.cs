@@ -1,5 +1,7 @@
 static class App
 {
+    private enum View { Main, List, Help }
+
     private static CancellationTokenSource? _playbackCts;
     private static readonly object _lock = new();
 
@@ -97,10 +99,11 @@ static class App
         string? status = null;
         bool statusOk = true;
         string? availabilityError = PcSpeaker.CheckAvailability();
+        View view = View.Main;
 
         while (true)
         {
-            DrawMenu(status, statusOk, availabilityError);
+            DrawScreen(view, status, statusOk, availabilityError);
             status = null;
 
             Ui.Prompt(locked: availabilityError is not null);
@@ -108,17 +111,22 @@ static class App
             if (line is null) break;
 
             string input = line.Trim();
-            if (input.Length == 0) continue;
+            if (input.Length == 0)
+            {
+                // Common input behavior: empty input just refreshes the current screen.
+                continue;
+            }
 
             string cmd = input.ToLowerInvariant();
             if (cmd is "0" or "q" or "quit" or "exit") break;
-            if (cmd is "l" or "ls" or "list") { ShowListScreen(availabilityError); continue; }
-            if (cmd is "cls" or "clear") { status = null; continue; }
-            if (cmd is "h" or "help" or "?") { ShowHelpScreen(availabilityError); continue; }
+            if (cmd is "l" or "ls" or "list") { view = View.List; continue; }
+            if (cmd is "cls" or "clear") { view = View.Main; status = null; continue; }
+            if (cmd is "h" or "help" or "?") { view = View.Help; continue; }
 
             if (cmd is "stop" or "mute")
             {
                 PcSpeaker.Stop();
+                view = View.Main;
                 status = availabilityError is null
                     ? "speaker muted :: port 0x61 cleared"
                     : "mute requested :: best effort (speaker access unavailable)";
@@ -129,6 +137,7 @@ static class App
             if (availabilityError is not null)
             {
                 availabilityError = PcSpeaker.CheckAvailability() ?? availabilityError;
+                view = View.Main;
                 status = "playback disabled: input rejected while speaker access is unavailable";
                 statusOk = false;
                 continue;
@@ -138,12 +147,14 @@ static class App
             var (songs, errors) = ResolveAll(queries);
             if (errors.Count > 0)
             {
+                view = View.Main;
                 status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  use 'list' for track ids/keys";
                 statusOk = false;
                 continue;
             }
             if (songs.Count == 0)
             {
+                view = View.Main;
                 status = "empty selection";
                 statusOk = false;
                 continue;
@@ -153,12 +164,14 @@ static class App
             if (warn is not null)
             {
                 availabilityError = warn;
+                view = View.Main;
                 status = null;
                 statusOk = false;
                 continue;
             }
 
             bool aborted = PlayQueue(songs, interactive: true);
+            view = View.Main;
             if (aborted)
             {
                 status = songs.Count > 1
@@ -184,59 +197,47 @@ static class App
         return 0;
     }
 
-    private static void DrawMenu(string? status, bool statusOk, string? availabilityError)
+    private static void DrawScreen(View view, string? status, bool statusOk, string? availabilityError)
     {
         Ui.ClearScreen();
-        Ui.PrintBanner(compact: true, availabilityError);
 
-        // headers/info
-        if (availabilityError is null)
+        switch (view)
         {
-            Ui.Dim("  playlist :: hidden (use 'list')");
-            Ui.Dim("  cmd      :: list, help, cls, stop");
-            Ui.Dim("  input    :: id / key / name / random");
-            Ui.Dim("  queue    :: separate with ',' ';' or space");
-            Ui.Dim("  exit     :: 0 / q");
+            case View.List:
+                Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
+                Ui.PrintTable();
+                break;
+            case View.Help:
+                Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
+                Ui.WriteHelpBody();
+                break;
+            default:
+                Ui.PrintBanner(compact: true, availabilityError);
+                // headers/info
+                if (availabilityError is null)
+                {
+                    Ui.Dim("  playlist :: hidden (use 'list')");
+                    Ui.Dim("  cmd      :: list, help, cls, stop");
+                    Ui.Dim("  input    :: id / key / name / random");
+                    Ui.Dim("  queue    :: separate with ',' ';' or space");
+                    Ui.Dim("  exit     :: 0 / q");
+                }
+                else
+                {
+                    Ui.Dim("  mode     :: playback disabled");
+                    Ui.Dim("  allowed  :: list, help, cls, stop, 0/q");
+                    Ui.Dim("  fix      :: restore driver/access and restart");
+                }
+                Console.WriteLine();
+
+                // status/messages after headers
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    if (statusOk) Ui.Success(status); else Ui.Warn(status);
+                    Console.WriteLine();
+                }
+                break;
         }
-        else
-        {
-            Ui.Dim("  mode     :: playback disabled");
-            Ui.Dim("  allowed  :: list, help, cls, stop, 0/q");
-            Ui.Dim("  fix      :: restore driver/access and restart");
-        }
-
-        Console.WriteLine();
-
-        // status/messages after headers
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            if (statusOk) Ui.Success(status); else Ui.Warn(status);
-            Console.WriteLine();
-        }
-    }
-
-    private static void ShowHelpScreen(string? availabilityError = null)
-    {
-        Ui.ClearScreen();
-        Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
-        Ui.WriteHelpBody();
-        Console.WriteLine();
-
-        Ui.PromptSimple("press Enter to return");
-        Console.ReadLine();
-        Ui.ClearScreen();
-    }
-
-    private static void ShowListScreen(string? availabilityError = null)
-    {
-        Ui.ClearScreen();
-        Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
-        Ui.PrintTable();
-        Console.WriteLine();
-
-        Ui.PromptSimple("press Enter to return");
-        Console.ReadLine();
-        Ui.ClearScreen();
     }
 
     private static bool IsRandomKeyword(string s) =>
