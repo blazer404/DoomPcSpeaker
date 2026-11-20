@@ -184,7 +184,7 @@ static class App
 
         PcSpeaker.Stop();
         Ui.ClearScreen();
-        Ui.PrintBanner(compact: true, availabilityError);
+        Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
         Ui.Success("session closed :: speaker muted");
         Console.WriteLine();
         Ui.Reset();
