@@ -30,15 +30,23 @@ static class App
             if (args.Length > 0)
             {
                 if (args[0] == "0") return 0;
-                if (IsHelp(args[0])) { Ui.PrintHelp(); return 0; }
-                if (IsList(args[0])) { Ui.PrintBanner(compact: true); Ui.PrintTable(); return 0; }
+                if (IsHelp(args[0])) { Ui.PrintHelp(PcSpeaker.CheckAvailability()); return 0; }
+                if (IsList(args[0])) { Ui.PrintBanner(compact: true, PcSpeaker.CheckAvailability()); Ui.PrintTable(); return 0; }
                 if (IsStop(args[0]))
                 {
                     string? avail = PcSpeaker.CheckAvailability();
-                    if (avail is not null) { Ui.Error(avail); return 1; }
                     PcSpeaker.Stop();
-                    Ui.Success("speaker muted :: port 0x61 cleared");
-                    return 0;
+                    if (avail is null)
+                    {
+                        Ui.Success("speaker muted :: port 0x61 cleared");
+                        return 0;
+                    }
+
+                    Ui.PrintBanner(compact: true, avail);
+                    Console.WriteLine();
+                    Ui.Warn("mute requested :: best effort (speaker access unavailable)");
+                    Ui.Dim("  :: " + avail);
+                    return 1;
                 }
 
                 var queries = QueriesFromArgs(args);
@@ -52,11 +60,11 @@ static class App
                 if (errors.Count > 0)
                 {
                     Ui.Error("not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")));
-                    Ui.Dim("  :: use --list for tracklist :: keys: " + string.Join(", ", Melodies.All.Select(m => m.Key)) + ", random");
+                    Ui.Dim("  :: use --list to show available track ids, keys, and names");
                     return 1;
                 }
 
-                if (!EnsureSpeakerReady()) return 1;
+                if (!EnsureSpeakerReady(showBanner: true)) return 1;
 
                 bool aborted = PlayQueue(songs, interactive: false);
                 Console.WriteLine();
@@ -88,15 +96,14 @@ static class App
 
         string? status = null;
         bool statusOk = true;
-        string? availabilityWarn = PcSpeaker.CheckAvailability();
+        string? availabilityError = PcSpeaker.CheckAvailability();
 
         while (true)
         {
-            DrawMenu(status, statusOk, availabilityWarn);
+            DrawMenu(status, statusOk, availabilityError);
             status = null;
-            availabilityWarn = null;
 
-            Ui.Prompt();
+            Ui.Prompt(locked: availabilityError is not null);
             string? line = Console.ReadLine();
             if (line is null) break;
 
@@ -105,16 +112,33 @@ static class App
 
             string cmd = input.ToLowerInvariant();
             if (cmd is "0" or "q" or "quit" or "exit") break;
-            if (cmd is "l" or "ls" or "list") { ShowListScreen(); continue; }
+            if (cmd is "l" or "ls" or "list") { ShowListScreen(availabilityError); continue; }
             if (cmd is "cls" or "clear") { status = null; continue; }
-            if (cmd is "h" or "help" or "?") { ShowHelpScreen(); continue; }
-            if (cmd is "stop" or "mute") { PcSpeaker.Stop(); status = "speaker muted :: port 0x61 cleared"; statusOk = true; continue; }
+            if (cmd is "h" or "help" or "?") { ShowHelpScreen(availabilityError); continue; }
+
+            if (cmd is "stop" or "mute")
+            {
+                PcSpeaker.Stop();
+                status = availabilityError is null
+                    ? "speaker muted :: port 0x61 cleared"
+                    : "mute requested :: best effort (speaker access unavailable)";
+                statusOk = availabilityError is null;
+                continue;
+            }
+
+            if (availabilityError is not null)
+            {
+                availabilityError = PcSpeaker.CheckAvailability() ?? availabilityError;
+                status = "playback disabled: input rejected while speaker access is unavailable";
+                statusOk = false;
+                continue;
+            }
 
             var queries = SmartSplit(input);
             var (songs, errors) = ResolveAll(queries);
             if (errors.Count > 0)
             {
-                status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'"));
+                status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  use 'list' for track ids/keys";
                 statusOk = false;
                 continue;
             }
@@ -128,7 +152,8 @@ static class App
             string? warn = PcSpeaker.CheckAvailability();
             if (warn is not null)
             {
-                status = warn;
+                availabilityError = warn;
+                status = null;
                 statusOk = false;
                 continue;
             }
@@ -152,57 +177,56 @@ static class App
 
         PcSpeaker.Stop();
         Ui.ClearScreen();
-        Ui.PrintBanner(compact: true);
+        Ui.PrintBanner(compact: true, availabilityError);
         Ui.Success("session closed :: speaker muted");
         Console.WriteLine();
         Ui.Reset();
         return 0;
     }
 
-    private static void DrawMenu(string? status, bool statusOk, string? availabilityWarn)
+    private static void DrawMenu(string? status, bool statusOk, string? availabilityError)
     {
         Ui.ClearScreen();
-        Ui.PrintBanner(compact: true);
+        Ui.PrintBanner(compact: true, availabilityError);
 
-        if (availabilityWarn is not null)
-        {
-            Ui.Warn(availabilityWarn);
-            if (availabilityWarn.Contains("inpoutx64.dll", StringComparison.OrdinalIgnoreCase))
-                Ui.Dim("  :: get InpOutx64, place inpoutx64.dll next to exe, run as Administrator");
-            Console.WriteLine();
-        }
+        // headers/info
+        if (availabilityError is null)
+            Ui.Dim("  :: playlist hidden  ::  cmd: list help cls stop  ::  input: id/key/name/random  ::  queue: , ; space  ::  exit: 0/q");
+        else
+            Ui.Dim("  :: playback disabled  ::  allowed: list, help, cls, stop, 0/q  ::  fix driver/access and restart");
 
-        if (status is not null)
+        Console.WriteLine();
+
+        // status/messages after headers
+        if (!string.IsNullOrWhiteSpace(status))
         {
             if (statusOk) Ui.Success(status); else Ui.Warn(status);
             Console.WriteLine();
         }
-
-        Ui.Dim("  :: playlist hidden  ::  cmd: list  ::  input: id/key/name/random  ::  queue: , ; space  ::  exit: 0/q");
     }
 
-    private static void ShowHelpScreen()
+    private static void ShowHelpScreen(string? availabilityError = null)
     {
         Ui.ClearScreen();
-        Ui.PrintBanner(compact: true);
+        Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
         Ui.WriteHelpBody();
         Console.WriteLine();
-        Ui.Dim("  :: press Enter to return");
-        Ui.PromptSimple();
+
+        Ui.PromptSimple("press Enter to return");
         Console.ReadLine();
-        Ui.Reset();
+        Ui.ClearScreen();
     }
 
-    private static void ShowListScreen()
+    private static void ShowListScreen(string? availabilityError = null)
     {
         Ui.ClearScreen();
-        Ui.PrintBanner(compact: true);
+        Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
         Ui.PrintTable();
         Console.WriteLine();
-        Ui.Dim("  :: press Enter to return");
-        Ui.PromptSimple();
+
+        Ui.PromptSimple("press Enter to return");
         Console.ReadLine();
-        Ui.Reset();
+        Ui.ClearScreen();
     }
 
     private static bool IsRandomKeyword(string s) =>
@@ -239,7 +263,16 @@ static class App
                 .SelectMany(a => a.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 .ToArray();
 
-        // Multiple args without delimiters: each arg is a track token from the shell.
+        // Multiple args without delimiters: treat as separate tokens, but allow
+        // a multi-word alias/name passed as separate shell args (e.g. "prince igor").
+        string joined = string.Join(" ", effective).Trim();
+        if (joined.Length > 0 && Melodies.Resolve(joined) is not null)
+        {
+            bool allResolveIndividually = effective.All(a => Melodies.Resolve(a) is not null);
+            if (!allResolveIndividually)
+                return [joined];
+        }
+
         return effective;
     }
 
@@ -256,13 +289,23 @@ static class App
         return (songs, errors);
     }
 
-    private static bool EnsureSpeakerReady()
+    private static bool EnsureSpeakerReady(bool showBanner = false)
     {
         string? warn = PcSpeaker.CheckAvailability();
         if (warn is null) return true;
+
+        if (showBanner)
+        {
+            Ui.PrintBanner(compact: true, warn);
+            Console.WriteLine();
+        }
+
         Ui.Error(warn);
+        Ui.Dim("  :: playback unavailable: input/command blocked until driver and access are ready");
         if (warn.Contains("inpoutx64.dll", StringComparison.OrdinalIgnoreCase))
             Ui.Dim("  :: place inpoutx64.dll next to exe + run as Administrator");
+        else
+            Ui.Dim("  :: run as Administrator and check speaker/driver availability");
         return false;
     }
 

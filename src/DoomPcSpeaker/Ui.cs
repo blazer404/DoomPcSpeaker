@@ -17,14 +17,44 @@ static class Ui
         try
         {
             Console.ResetColor();
-            Console.SetCursorPosition(0, 0);
-            Console.Clear();
-            Console.SetCursorPosition(0, 0);
+            try { Console.CursorVisible = true; } catch { }
+
+            // Best effort: clear scrollback, screen and move cursor home.
+            try { Console.Write("\x1b[H\x1b[2J\x1b[3J"); } catch { }
+
+            if (OperatingSystem.IsWindows())
+            {
+                try
+                {
+                    // Reduce scrollback/buffer artifacts by matching buffer to visible window.
+                    if (Console.BufferWidth != Console.WindowWidth || Console.BufferHeight != Console.WindowHeight)
+                        Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
+                }
+                catch { }
+
+                try { Console.WindowLeft = 0; } catch { }
+                try { Console.WindowTop = 0; } catch { }
+            }
+
+            try { Console.SetCursorPosition(0, 0); } catch { }
+            try { Console.Clear(); } catch { }
+
+            // Repeat clears to remove remnants in terminals that keep off-screen buffer content.
+            try { Console.Write("\x1b[H\x1b[2J\x1b[3J"); } catch { }
+            try { Console.SetCursorPosition(0, 0); } catch { }
+
+            if (OperatingSystem.IsWindows())
+            {
+                try { Console.WindowLeft = 0; } catch { }
+                try { Console.WindowTop = 0; } catch { }
+            }
+
+            try { Console.Write("\x1b[H"); } catch { }
         }
         catch { }
     }
 
-    public static void PrintBanner(bool compact)
+    public static void PrintBanner(bool compact, string? availabilityError = null, bool showNfo = true)
     {
         WriteLine(ConsoleColor.DarkGray,  "  ░▒▓████████████████████████████████████████████████████████████████████▓▒░");
         Write(ConsoleColor.Black == Console.BackgroundColor ? ConsoleColor.DarkCyan : ConsoleColor.Cyan, "  ▒");
@@ -64,16 +94,20 @@ static class Ui
         WriteLine(ConsoleColor.Cyan,      "    ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██");
         Console.WriteLine();
 
-        Tape("cracked · armed · loud · retro · slightly illegal vibes · 18 beeps loaded", ConsoleColor.Green, ConsoleColor.DarkGray);
+        Tape($"cracked · armed · loud · retro · {Melodies.All.Length:00} beeps loaded", ConsoleColor.Green, ConsoleColor.DarkGray);
         Console.WriteLine();
 
-        NfoBox(compact);
-        Console.WriteLine();
+        if (showNfo)
+        {
+            NfoBox(compact, availabilityError);
+            Console.WriteLine();
+        }
     }
 
-    private static void NfoBox(bool compact)
+    private static void NfoBox(bool compact, string? availabilityError = null)
     {
-        BoxTop("ACCESS GRANTED // release.nfo", W);
+        string title = availabilityError is null ? "ACCESS GRANTED // release.nfo" : "ACCESS DENIED // release.nfo";
+        BoxTop(title, W);
         NfoRow("release", "pcspkr hardware beeper jukebox [final keygen cut]", ConsoleColor.White);
         NfoRow("scene", "dedsec audio division / crackscene crossover", ConsoleColor.Magenta);
         NfoRow("payload", $"{Melodies.All.Length:00} weaponized chiptunes for the onboard speaker", ConsoleColor.Green);
@@ -82,7 +116,10 @@ static class Ui
         NfoRow("engine", "i8254 pit ch2 @ 0x43/42/61 · raw square-wave chaos", ConsoleColor.Cyan);
         NfoRow("access", "administrator rights required (yes, really)", ConsoleColor.Yellow);
         NfoRow("modes", "interactive shell, direct cli, queue, random", ConsoleColor.Gray);
-        NfoRow("status", "locked, loaded, waiting for input...", ConsoleColor.Green);
+        if (availabilityError is null)
+            NfoRow("status", "locked, loaded, waiting for input...", ConsoleColor.Green);
+        else
+            NfoRow("status", availabilityError, ConsoleColor.Red);
         if (!compact)
         {
             BoxSep(W);
@@ -90,6 +127,15 @@ static class Ui
             NfoRow("queue", "separate tracks with ',' ';' or space", ConsoleColor.White);
             NfoRow("cmds", "list | help | cls | stop | 0/q exit", ConsoleColor.DarkGray);
             NfoRow("warn", "ctrl+c aborts playback, not your life choices", ConsoleColor.Red);
+        }
+        if (availabilityError is not null)
+        {
+            BoxSep(W);
+            if (availabilityError.Contains("inpoutx64.dll", StringComparison.OrdinalIgnoreCase))
+                NfoRow("fix", "place inpoutx64.dll next to exe, run as administrator", ConsoleColor.Yellow);
+            else
+                NfoRow("fix", "run as administrator and check speaker/driver access", ConsoleColor.Yellow);
+            NfoRow("note", "playback input is disabled until this is resolved", ConsoleColor.Red);
         }
         BoxBottom(W);
     }
@@ -150,9 +196,9 @@ static class Ui
         WriteLine(ConsoleColor.DarkGray, new string('═', inner) + "╝");
     }
 
-    public static void PrintHelp()
+    public static void PrintHelp(string? availabilityError = null)
     {
-        PrintBanner(compact: true);
+        PrintBanner(compact: true, availabilityError);
         WriteHelpBody();
         Console.WriteLine();
     }
@@ -189,24 +235,42 @@ static class Ui
         WriteLine(ConsoleColor.Yellow, "administrator rights");
     }
 
-    public static void Prompt()
+    public static void Prompt(bool locked = false)
     {
         Console.WriteLine();
-        Write(ConsoleColor.DarkGray, "  ┏━━[");
-        Write(ConsoleColor.Cyan, "inject command");
-        Write(ConsoleColor.DarkGray, "]━━[");
-        Write(ConsoleColor.Magenta, "id/key/name/random");
-        Write(ConsoleColor.DarkGray, "]━━[");
-        Write(ConsoleColor.Green, "0 to bail");
-        WriteLine(ConsoleColor.DarkGray, "]━━┓");
-        Write(ConsoleColor.Red, "  ┗━");
-        Write(ConsoleColor.Yellow, "▶ ");
+        if (!locked)
+        {
+            Write(ConsoleColor.DarkGray, "  ┏━━[");
+            Write(ConsoleColor.Cyan, "inject command");
+            Write(ConsoleColor.DarkGray, "]━━[");
+            Write(ConsoleColor.Magenta, "id/key/name/random");
+            Write(ConsoleColor.DarkGray, "]━━[");
+            Write(ConsoleColor.Green, "0 to bail");
+            WriteLine(ConsoleColor.DarkGray, "]━━┓");
+            Write(ConsoleColor.Red, "  ┗━");
+            Write(ConsoleColor.Yellow, "▶ ");
+        }
+        else
+        {
+            Write(ConsoleColor.DarkGray, "  ┏━━[");
+            Write(ConsoleColor.Red, "input locked");
+            Write(ConsoleColor.DarkGray, "]━━[");
+            Write(ConsoleColor.Magenta, "list/help/cls/stop");
+            Write(ConsoleColor.DarkGray, "]━━[");
+            Write(ConsoleColor.Green, "0 to bail");
+            WriteLine(ConsoleColor.DarkGray, "]━━┓");
+            Write(ConsoleColor.Red, "  ┗━");
+            Write(ConsoleColor.DarkGray, "▶ ");
+        }
         Console.ResetColor();
     }
 
-    public static void PromptSimple()
+    public static void PromptSimple(string label = "press Enter to return")
     {
         Console.WriteLine();
+        Write(ConsoleColor.DarkGray, "  ┏━━[");
+        Write(ConsoleColor.Yellow, label);
+        WriteLine(ConsoleColor.DarkGray, "]━━┓");
         Write(ConsoleColor.Red, "  ┗━");
         Write(ConsoleColor.Yellow, "▶ ");
         Console.ResetColor();
@@ -214,35 +278,16 @@ static class Ui
 
     public static void NowPlaying(Melodies.Song song, int? index = null, int? total = null)
     {
-        Write(ConsoleColor.DarkGray, "  ╔═");
-        Write(ConsoleColor.Red, "█");
-        Write(ConsoleColor.Yellow, "▓");
-        Write(ConsoleColor.Green, "▒");
-        Write(ConsoleColor.DarkGray, " [ ");
-        Write(ConsoleColor.White, "SIGNAL INJECTED");
+        string signal = "SIGNAL INJECTED";
         if (index.HasValue && total.HasValue && total.Value > 1)
-        {
-            Write(ConsoleColor.DarkGray, " // ");
-            Write(ConsoleColor.Yellow, $"{index.Value:00}/{total.Value:00}");
-        }
-        WriteLine(ConsoleColor.DarkGray, " ] ══════════════════════════════╗");
+            signal += $" // {index.Value:00}/{total.Value:00}";
 
-        Write(ConsoleColor.DarkGray, "  ║  ");
-        Write(ConsoleColor.Cyan, "track ");
-        Write(ConsoleColor.DarkGray, ":: ");
-        Write(ConsoleColor.White, song.Name);
-        Write(ConsoleColor.DarkGray, "  [");
-        Write(ConsoleColor.Magenta, song.Key);
-        WriteLine(ConsoleColor.DarkGray, "]");
-
-        Write(ConsoleColor.DarkGray, "  ║  ");
-        Write(ConsoleColor.DarkGray, "route :: port 0x61 > i8254 ch2 > square-wave > your ears");
-        WriteLine(string.Empty);
-
-        Write(ConsoleColor.DarkGray, "  ╚═ ");
-        Write(ConsoleColor.Red, "ctrl+c = abort mission");
-        Write(ConsoleColor.DarkGray, "  //  ");
-        WriteLine(ConsoleColor.Green, "no mercy for the pc speaker");
+        BoxTop(signal, W);
+        NfoRow("track", $"{song.Name}  [{song.Key}]", ConsoleColor.White);
+        NfoRow("route", "port 0x61 > i8254 ch2 > square-wave > your ears", ConsoleColor.DarkGray);
+        BoxSep(W);
+        NfoRow("ctrl+c", "abort mission  //  no mercy for the pc speaker", ConsoleColor.Red);
+        BoxBottom(W);
     }
 
     public static void Success(string msg) => Tag(ConsoleColor.Green, "OK", msg, ConsoleColor.White);
