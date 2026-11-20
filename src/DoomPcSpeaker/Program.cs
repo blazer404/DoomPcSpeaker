@@ -2,7 +2,7 @@ using System.Text;
 
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
-Console.Title = "PCSPKR // BEEPER JUKEBOX";
+Console.Title = "PCSPKR // SIGNAL NODE";
 
 AppDomain.CurrentDomain.ProcessExit += (_, _) =>
 {

@@ -219,23 +219,21 @@ static class App
                 break;
             default:
                 Ui.PrintBanner(compact: true, availabilityError);
-                // headers/info
                 if (availabilityError is null)
                 {
-                    Ui.Dim("  cmd      :: list, help, cls, stop");
-                    Ui.Dim("  input    :: id / key / name / random");
-                    Ui.Dim("  queue    :: separate with ',' ';' or space");
-                    Ui.Dim("  exit     :: 0 / q");
+                    Ui.Dim("  [SYS] cmds   :: list  help  cls  stop");
+                    Ui.Dim("  [SYS] input  :: id / key / name / random");
+                    Ui.Dim("  [SYS] queue  :: delimit with ',' ';' or space");
+                    Ui.Dim("  [SYS] exit   :: 0 / q / quit / exit");
                 }
                 else
                 {
-                    Ui.Dim("  mode     :: playback disabled");
-                    Ui.Dim("  allowed  :: list, help, cls, stop, 0/q");
-                    Ui.Dim("  fix      :: restore driver/access and restart");
+                    Ui.Dim("  [SYS] mode   :: playback disabled / read-only shell");
+                    Ui.Dim("  [SYS] allow  :: list  help  cls  stop  0/q");
+                    Ui.Dim("  [SYS] action :: restore driver/access and restart node");
                 }
                 Console.WriteLine();
 
-                // status/messages after headers
                 if (!string.IsNullOrWhiteSpace(status))
                 {
                     if (statusOk) Ui.Success(status); else Ui.Warn(status);
