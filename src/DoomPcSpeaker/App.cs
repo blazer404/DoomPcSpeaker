@@ -165,7 +165,7 @@ static class App
                 continue;
             }
 
-            bool aborted = PlayQueue(songs, interactive: true);
+            bool aborted = PlayQueue(songs, interactive: true, fromView: view);
             if (aborted)
             {
                 status = songs.Count > 1
@@ -325,7 +325,7 @@ static class App
         return false;
     }
 
-    private static bool PlayQueue(IReadOnlyList<Melodies.Song> songs, bool interactive)
+    private static bool PlayQueue(IReadOnlyList<Melodies.Song> songs, bool interactive, View fromView = View.Main)
     {
         var cts = new CancellationTokenSource();
         lock (_lock) _playbackCts = cts;
@@ -336,7 +336,7 @@ static class App
                 if (cts.IsCancellationRequested) break;
 
                 Ui.ClearScreen();
-                Ui.PrintBanner(compact: true);
+                Ui.PrintBanner(compact: true, availabilityError: null, showNfo: fromView == View.Main);
                 Console.WriteLine();
                 Ui.NowPlaying(songs[i], i + 1, songs.Count);
                 Console.WriteLine();
