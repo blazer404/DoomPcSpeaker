@@ -211,13 +211,19 @@ static class Ui
         Console.WriteLine();
 
         Section("controls", ConsoleColor.Magenta);
-        HelpInfo("target", "id / key / name fragment");
+        HelpInfo("target", "id / key / name fragment / alias");
         HelpInfo("chaos", "random / rnd / rand / shuffle");
         HelpInfo("queue", "comma, semicolon or space separated");
+        HelpInfo("list", "show tracklist (interactive: list/l/ls)");
+        HelpInfo("help", "show this screen (interactive: help/h/?)");
+        HelpInfo("cls", "return to main screen / clear status");
+        HelpInfo("stop", "silence speaker (stop/mute)");
+        HelpInfo("abort", "Ctrl+C stops playback/queue");
         HelpInfo("escape", "0 / q / quit / exit");
         Console.WriteLine();
 
         Section("examples", ConsoleColor.Yellow);
+        Example("DoomPcSpeaker.exe");
         Example("DoomPcSpeaker.exe doom");
         Example("DoomPcSpeaker.exe 7,13,18");
         Example("DoomPcSpeaker.exe doom pirates rickroll");
@@ -230,6 +236,9 @@ static class Ui
         Write(ConsoleColor.Yellow, "inpoutx64.dll");
         Write(ConsoleColor.White, " next to exe + ");
         WriteLine(ConsoleColor.Yellow, "administrator rights");
+        Write(ConsoleColor.Yellow, "  [tip]");
+        Write(ConsoleColor.White, " too dumb for CLI flags? run without args, mash buttons in interactive mode, and suffer.");
+        Console.WriteLine();
     }
 
     public static void Prompt(bool locked = false)
