@@ -73,18 +73,18 @@ static class Ui
 
         WriteLine(ConsoleColor.Cyan,      "    ██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██");
         WriteLine(ConsoleColor.Cyan,      "    ██                                                              ██");
-        WriteLine(ConsoleColor.Cyan,      "    ██   ██████╗  ██████╗███████╗██████╗ ██╗  ██╗██████╗           ██");
-        WriteLine(ConsoleColor.Cyan,      "    ██   ██╔══██╗██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗          ██");
-        WriteLine(ConsoleColor.Magenta,   "    ██   ██████╔╝██║     ███████╗██████╔╝█████╔╝ ██████╔╝          ██");
-        WriteLine(ConsoleColor.Magenta,   "    ██   ██╔═══╝ ██║     ╚════██║██╔═══╝ ██╔═██╗ ██╔══██╗          ██");
-        WriteLine(ConsoleColor.Red,       "    ██   ██║     ╚██████╗███████║██║     ██║  ██╗██║  ██║          ██");
-        WriteLine(ConsoleColor.Red,       "    ██   ╚═╝      ╚═════╝╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝          ██");
+        WriteLine(ConsoleColor.Cyan,      "    ██   ██████╗  ██████╗███████╗██████╗ ██╗  ██╗██████╗            ██");
+        WriteLine(ConsoleColor.Cyan,      "    ██   ██╔══██╗██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗           ██");
+        WriteLine(ConsoleColor.Magenta,   "    ██   ██████╔╝██║     ███████╗██████╔╝█████╔╝ ██████╔╝           ██");
+        WriteLine(ConsoleColor.Magenta,   "    ██   ██╔═══╝ ██║     ╚════██║██╔═══╝ ██╔═██╗ ██╔══██╗           ██");
+        WriteLine(ConsoleColor.Red,       "    ██   ██║     ╚██████╗███████║██║     ██║  ██╗██║  ██║           ██");
+        WriteLine(ConsoleColor.Red,       "    ██   ╚═╝      ╚═════╝╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝           ██");
         WriteLine(ConsoleColor.DarkGray,  "    ██                                                              ██");
         Write(ConsoleColor.DarkGray,      "    ██   ");
         Write(ConsoleColor.Yellow,        ">>> KEYGEN BEEPER JUKEBOX <<<");
-        Write(ConsoleColor.DarkGray,      "   ");
+        Write(ConsoleColor.DarkGray,      "  ");
         Write(ConsoleColor.Green,         "NO SOUND CARD? NO PROBLEM.");
-        WriteLine(ConsoleColor.DarkGray,  "   ██");
+        WriteLine(ConsoleColor.DarkGray,  "  ██");
         Write(ConsoleColor.DarkGray,      "    ██   ");
         Write(ConsoleColor.White,         "YOUR MOTHERBOARD SCREAMS ON COMMAND");
         Write(ConsoleColor.DarkGray,      "   ");
@@ -144,17 +144,14 @@ static class Ui
     {
         int keyWidth = Math.Max(12, Melodies.All.Max(m => m.Key.Length));
         int nameWidth = 38;
-        int inner = 13 + keyWidth + nameWidth; // " [nn]  key  ▸ name " => 1+4+2+k+3+1+1+n = 13+k+n? compute carefully
-
-        // layout: " [00]  key.........  ▸ name.............................. "
-        // 1 + 4 + 2 + keyWidth + 3 + 2 + nameWidth + 1 = 13 + keyWidth + nameWidth
-        inner = 13 + keyWidth + nameWidth;
+        // row inside borders: " [00]  " + key(keyWidth) + "  ▸ " + name(nameWidth) + " "
+        int inner = 12 + keyWidth + nameWidth;
 
         Write(ConsoleColor.DarkGray, "  ╔═");
         Write(ConsoleColor.Yellow, "█▓▒ ");
         Write(ConsoleColor.Cyan, "TRACKLIST.DATABASE");
         Write(ConsoleColor.Yellow, " ▒▓█");
-        int topFill = inner - 24;
+        int topFill = inner - 27; // "═" + "█▓▒ " + title + " ▒▓█"
         if (topFill < 0) topFill = 0;
         WriteLine(ConsoleColor.DarkGray, new string('═', topFill) + "╗");
 
