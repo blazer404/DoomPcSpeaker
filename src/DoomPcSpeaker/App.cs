@@ -216,7 +216,6 @@ static class App
                 // headers/info
                 if (availabilityError is null)
                 {
-                    Ui.Dim("  playlist :: hidden (use 'list')");
                     Ui.Dim("  cmd      :: list, help, cls, stop");
                     Ui.Dim("  input    :: id / key / name / random");
                     Ui.Dim("  queue    :: separate with ',' ';' or space");
