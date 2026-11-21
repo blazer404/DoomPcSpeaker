@@ -60,26 +60,26 @@ static class Ui
     {
         bool online = availabilityError is null;
 
-        Tape("SIGNAL NODE // PCSPKR_HARDWARE_INTERFACE // TACTICAL AUDIO TERMINAL", ConsoleColor.DarkCyan, ConsoleColor.DarkGray);
+        Tape("SIGNAL NODE // PCSPKR_HARDWARE_INTERFACE // TACTICAL AUDIO TERMINAL", ConsoleColor.Cyan, ConsoleColor.Magenta);
         Console.WriteLine();
 
         string[] logo =
         [
-            "██████╗  ██████╗███████╗██████╗ ██╗  ██╗██████╗ ",
-            "██╔══██╗██╔════╝██╔════╝██╔══██╗██║ ██╔╝██╔══██╗",
-            "██████╔╝██║     ███████╗██████╔╝█████╔╝ ██████╔╝",
-            "██╔═══╝ ██║     ╚════██║██╔═══╝ ██╔═██╗ ██╔══██╗",
-            "██║     ╚██████╗███████║██║     ██║  ██╗██║  ██║",
-            "╚═╝      ╚═════╝╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝",
+            "▓▓▓▓▓▓╗ ░▓▓▓▓▓▓╗▓▓▓▓▓▓▓╗▓▓▓▓▓▓╗░▓▓╗ ░▓▓╗▓▓▓▓▓▓╗░",
+            "▓▓╔══▓▓╗▓▓╔════╝▓▓╔════╝▓▓╔══▓▓╗▓▓║░▓▓╔╝▓▓╔══▓▓╗",
+            "▓▓▓▓▓▓╔╝▓▓║░░░░░▓▓▓▓▓▓▓╗▓▓▓▓▓▓╔╝▓▓▓▓▓╔╝░▓▓▓▓▓▓╔╝",
+            "▓▓╔═══╝░▓▓║░░░░░╚════▓▓║▓▓╔═══╝░▓▓╔═▓▓╗░▓▓╔══▓▓╗",
+            "▓▓║░░░░░╚▓▓▓▓▓▓╗▓▓▓▓▓▓▓║▓▓║░░░░░▓▓║ ░▓▓╗▓▓║░░▓▓║",
+            "╚═╝░░░░░░╚═════╝╚══════╝╚═╝░░░░░╚═╝  ╚═╝╚═╝░░╚═╝",
         ];
         ConsoleColor[] logoColors =
         [
             ConsoleColor.Cyan,
-            ConsoleColor.Cyan,
+            ConsoleColor.DarkCyan,
             ConsoleColor.Magenta,
-            ConsoleColor.Magenta,
+            ConsoleColor.DarkMagenta,
             ConsoleColor.Red,
-            ConsoleColor.Red,
+            ConsoleColor.DarkRed,
         ];
 
         RoundedTop("NODE:PCSPKR  //  BEEPER CORE  //  SIGNAL INTERFACE", ConsoleColor.Yellow);
@@ -97,7 +97,7 @@ static class Ui
         RoundedBottom();
 
         Console.WriteLine();
-        Tape($"signal={ (online ? "stable" : "degraded") }  //  payload={Melodies.All.Length:00} modules  //  ui=tactical_terminal", ConsoleColor.Green, ConsoleColor.Cyan);
+        Tape($"signal={ (online ? "stable" : "degraded") }  //  payload={Melodies.All.Length:00} modules  //  ui=tactical_terminal", ConsoleColor.Green, ConsoleColor.Magenta);
 
         if (showNfo)
         {
@@ -168,23 +168,23 @@ static class Ui
                 string key = Fit(m.Key.ToLowerInvariant(), keyWidth).PadRight(keyWidth);
                 string name = Fit(m.Name, nameWidth).PadRight(nameWidth);
 
-                Write(ConsoleColor.DarkGray, Prefix + "║ ");
-                Write(ConsoleColor.DarkGray, "[");
+                Write(ConsoleColor.Gray, Prefix + "║ ");
+                Write(ConsoleColor.Gray, "[");
                 Write(ConsoleColor.Yellow, num);
-                Write(ConsoleColor.DarkGray, "]  ");
+                Write(ConsoleColor.Gray, "]  ");
                 Write(ConsoleColor.Cyan, key);
-                Write(ConsoleColor.DarkGray, "  ▸ ");
+                Write(ConsoleColor.Gray, "  ▸ ");
                 Write(ConsoleColor.White, name);
-                WriteLine(ConsoleColor.DarkGray, " ║");
+                WriteLine(ConsoleColor.Gray, " ║");
                 idx++;
             }
         }
 
         DBoxSepCustom(inner);
         string footer = Fit($"  {Melodies.All.Length:00} modules armed  //  target: id | key | name | random", inner).PadRight(inner);
-        Write(ConsoleColor.DarkGray, Prefix + "║");
+        Write(ConsoleColor.Gray, Prefix + "║");
         Write(ConsoleColor.Green, footer);
-        WriteLine(ConsoleColor.DarkGray, "║");
+        WriteLine(ConsoleColor.Gray, "║");
         DBoxBottomCustom(inner);
     }
 
@@ -245,31 +245,31 @@ static class Ui
         Console.WriteLine();
         if (!locked)
         {
-            Write(ConsoleColor.DarkGray, Prefix + "╭─[");
+            Write(ConsoleColor.Gray, Prefix + "╭─[");
             Write(ConsoleColor.Cyan, "NODE@PCSPKR");
-            Write(ConsoleColor.DarkGray, "]─[");
+            Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Green, "INPUT:READY");
-            Write(ConsoleColor.DarkGray, "]─[");
+            Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Magenta, "id/key/name/random/queue");
-            WriteLine(ConsoleColor.DarkGray, "]");
+            WriteLine(ConsoleColor.Gray, "]");
 
-            Write(ConsoleColor.DarkGray, Prefix + "╰─");
+            Write(ConsoleColor.Gray, Prefix + "╰─");
             Write(ConsoleColor.Green, "inject");
-            Write(ConsoleColor.DarkGray, " > ");
+            Write(ConsoleColor.Gray, " > ");
         }
         else
         {
-            Write(ConsoleColor.DarkGray, Prefix + "╭─[");
+            Write(ConsoleColor.Gray, Prefix + "╭─[");
             Write(ConsoleColor.Red, "NODE@PCSPKR");
-            Write(ConsoleColor.DarkGray, "]─[");
+            Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Red, "INPUT:LOCKED");
-            Write(ConsoleColor.DarkGray, "]─[");
+            Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Yellow, "list/help/cls/stop/0");
-            WriteLine(ConsoleColor.DarkGray, "]");
+            WriteLine(ConsoleColor.Gray, "]");
 
-            Write(ConsoleColor.DarkGray, Prefix + "╰─");
+            Write(ConsoleColor.Gray, Prefix + "╰─");
             Write(ConsoleColor.Red, "denied");
-            Write(ConsoleColor.DarkGray, " > ");
+            Write(ConsoleColor.Gray, " > ");
         }
         Console.ResetColor();
     }
@@ -277,14 +277,14 @@ static class Ui
     public static void PromptSimple(string label = "press Enter to return")
     {
         Console.WriteLine();
-        Write(ConsoleColor.DarkGray, Prefix + "╭─[");
+        Write(ConsoleColor.Gray, Prefix + "╭─[");
         Write(ConsoleColor.Yellow, "AWAIT");
-        Write(ConsoleColor.DarkGray, "]─[");
+        Write(ConsoleColor.Gray, "]─[");
         Write(ConsoleColor.White, Fit(label, 54));
-        WriteLine(ConsoleColor.DarkGray, "]");
-        Write(ConsoleColor.DarkGray, Prefix + "╰─");
+        WriteLine(ConsoleColor.Gray, "]");
+        Write(ConsoleColor.Gray, Prefix + "╰─");
         Write(ConsoleColor.Yellow, "input");
-        Write(ConsoleColor.DarkGray, " > ");
+        Write(ConsoleColor.Gray, " > ");
         Console.ResetColor();
     }
 
@@ -356,9 +356,9 @@ static class Ui
         string t = $"[ {title} ]";
         int fill = PanelInner - 1 - t.Length;
         if (fill < 0) { t = Fit(t, PanelInner - 1); fill = 0; }
-        Write(ConsoleColor.DarkGray, Prefix + "╭─");
+        Write(ConsoleColor.Gray, Prefix + "╭─");
         Write(titleColor, t);
-        WriteLine(ConsoleColor.DarkGray, new string('─', fill) + "╮");
+        WriteLine(ConsoleColor.Gray, new string('─', fill) + "╮");
     }
 
     private static void RoundedMid(string label, ConsoleColor labelColor)
@@ -366,17 +366,17 @@ static class Ui
         string l = $"[ {label} ]";
         int fill = PanelInner - 1 - l.Length;
         if (fill < 0) { l = Fit(l, PanelInner - 1); fill = 0; }
-        Write(ConsoleColor.DarkGray, Prefix + "├─");
+        Write(ConsoleColor.Gray, Prefix + "├─");
         Write(labelColor, l);
-        WriteLine(ConsoleColor.DarkGray, new string('─', fill) + "┤");
+        WriteLine(ConsoleColor.Gray, new string('─', fill) + "┤");
     }
 
     private static void RoundedBody(string text, ConsoleColor color)
     {
         string content = Fit(text, PanelInner).PadRight(PanelInner);
-        Write(ConsoleColor.DarkGray, Prefix + "│");
+        Write(ConsoleColor.Gray, Prefix + "│");
         Write(color, content);
-        WriteLine(ConsoleColor.DarkGray, "│");
+        WriteLine(ConsoleColor.Gray, "│");
     }
 
     private static void RoundedRow(string l1, string v1, ConsoleColor c1, string l2, string v2, ConsoleColor c2)
@@ -386,16 +386,16 @@ static class Ui
         string left = Fit($" {l1,-5}: {v1}", half).PadRight(half);
         string right = Fit($" {l2,-5}: {v2}", PanelInner - 3 - half).PadRight(PanelInner - 3 - half);
 
-        Write(ConsoleColor.DarkGray, Prefix + "│");
+        Write(ConsoleColor.Gray, Prefix + "│");
         Write(c1, left);
-        Write(ConsoleColor.DarkGray, " │ ");
+        Write(ConsoleColor.Gray, " │ ");
         Write(c2, right);
-        WriteLine(ConsoleColor.DarkGray, "│");
+        WriteLine(ConsoleColor.Gray, "│");
     }
 
     private static void RoundedBottom()
     {
-        WriteLine(ConsoleColor.DarkGray, Prefix + "╰" + new string('─', PanelInner) + "╯");
+        WriteLine(ConsoleColor.Gray, Prefix + "╰" + new string('─', PanelInner) + "╯");
     }
 
     // --- Rounded help panels ---
@@ -424,7 +424,7 @@ static class Ui
         {
             string prefix = "  node@pcspkr:~$ ";
             string content = Fit(prefix + text, _inner).PadRight(_inner);
-            Write(ConsoleColor.DarkGray, Prefix + "│");
+            Write(ConsoleColor.Gray, Prefix + "│");
             // colorize prompt parts
             string p1 = "  node@pcspkr";
             string p2 = ":";
@@ -443,32 +443,32 @@ static class Ui
             Seg(p3, ConsoleColor.Cyan);
             Seg(p4, ConsoleColor.DarkGray);
             if (pos < content.Length) Write(ConsoleColor.White, content[pos..]);
-            WriteLine(ConsoleColor.DarkGray, "│");
+            WriteLine(ConsoleColor.Gray, "│");
         }
 
         public void Alert(string label, string text, ConsoleColor valueColor)
         {
-            Write(ConsoleColor.DarkGray, Prefix + "│");
+            Write(ConsoleColor.Gray, Prefix + "│");
             Write(ConsoleColor.Red, "  [!] ");
             Write(ConsoleColor.White, $"{Fit(label, 7).PadRight(7)}: ");
             int used = 15; // "  [!] " (6) + label(7) + ": " (2)
             Write(valueColor, Fit(text, _inner - used).PadRight(_inner - used));
-            WriteLine(ConsoleColor.DarkGray, "│");
+            WriteLine(ConsoleColor.Gray, "│");
         }
 
         public void Tip(string text)
         {
             string content = Fit("  [tip] " + text, _inner).PadRight(_inner);
-            Write(ConsoleColor.DarkGray, Prefix + "│");
+            Write(ConsoleColor.Gray, Prefix + "│");
             Write(ConsoleColor.Yellow, "  [tip] ");
             Write(ConsoleColor.Gray, Fit(text, _inner - 8).PadRight(_inner - 8));
-            WriteLine(ConsoleColor.DarkGray, "│");
+            WriteLine(ConsoleColor.Gray, "│");
         }
 
         private void Print(string content, ConsoleColor valueColor, ConsoleColor labelColor, int labelStart, int labelLen)
         {
             content = Fit(content, _inner).PadRight(_inner);
-            Write(ConsoleColor.DarkGray, Prefix + "│");
+            Write(ConsoleColor.Gray, Prefix + "│");
             // split: prefix spaces + label + " :: " + rest
             if (labelStart + labelLen <= content.Length)
             {
@@ -483,7 +483,7 @@ static class Ui
             {
                 Write(valueColor, content);
             }
-            WriteLine(ConsoleColor.DarkGray, "│");
+            WriteLine(ConsoleColor.Gray, "│");
         }
     }
 
@@ -505,16 +505,16 @@ static class Ui
         string t = $"[ {title} ]";
         int fill = inner - 1 - t.Length;
         if (fill < 0) { t = Fit(t, inner - 1); fill = 0; }
-        Write(ConsoleColor.DarkGray, Prefix + "╔═");
+        Write(ConsoleColor.Gray, Prefix + "╔═");
         Write(titleColor, t);
-        WriteLine(ConsoleColor.DarkGray, new string('═', fill) + "╗");
+        WriteLine(ConsoleColor.Gray, new string('═', fill) + "╗");
     }
 
     private static void DBoxSep() => DBoxSepCustom(PanelInner);
 
     private static void DBoxSepCustom(int inner)
     {
-        WriteLine(ConsoleColor.DarkGray, Prefix + "╠" + new string('═', inner) + "╣");
+        WriteLine(ConsoleColor.Gray, Prefix + "╠" + new string('═', inner) + "╣");
     }
 
     private static void DBoxSepText(string text, int inner, ConsoleColor color)
@@ -522,26 +522,26 @@ static class Ui
         string t = Fit(text, inner);
         int fill = inner - t.Length;
         if (fill < 0) fill = 0;
-        Write(ConsoleColor.DarkGray, Prefix + "╠");
+        Write(ConsoleColor.Gray, Prefix + "╠");
         Write(color, t);
-        WriteLine(ConsoleColor.DarkGray, new string('═', fill) + "╣");
+        WriteLine(ConsoleColor.Gray, new string('═', fill) + "╣");
     }
 
     private static void DBoxBottom() => DBoxBottomCustom(PanelInner);
 
     private static void DBoxBottomCustom(int inner)
     {
-        WriteLine(ConsoleColor.DarkGray, Prefix + "╚" + new string('═', inner) + "╝");
+        WriteLine(ConsoleColor.Gray, Prefix + "╚" + new string('═', inner) + "╝");
     }
 
     private static void DBoxRow(string label, string value, ConsoleColor valueColor)
     {
         string l = $" {label,-10}: ";
         string content = Fit(value, PanelInner - l.Length).PadRight(PanelInner - l.Length);
-        Write(ConsoleColor.DarkGray, Prefix + "║");
+        Write(ConsoleColor.Gray, Prefix + "║");
         Write(ConsoleColor.Cyan, l);
         Write(valueColor, content);
-        WriteLine(ConsoleColor.DarkGray, "║");
+        WriteLine(ConsoleColor.Gray, "║");
     }
 
     private static void Tape(string text, ConsoleColor a, ConsoleColor b)
