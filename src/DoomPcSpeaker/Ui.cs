@@ -254,7 +254,7 @@ static class Ui
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");
-            Write(ConsoleColor.Green, "select");
+            Write(ConsoleColor.Green, "▸ select");
             Write(ConsoleColor.Gray, " > ");
         }
         else
@@ -268,7 +268,7 @@ static class Ui
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");
-            Write(ConsoleColor.Red, "locked");
+            Write(ConsoleColor.Red, "▸ locked");
             Write(ConsoleColor.Gray, " > ");
         }
         Console.ResetColor();
@@ -353,9 +353,9 @@ static class Ui
     // --- Rounded banner/prompt-like blocks ---
     private static void RoundedTop(string title, ConsoleColor titleColor)
     {
-        string t = $"[ {title} ]";
+        string t = $"░▒ {title} ▒░";
         int fill = PanelInner - 1 - t.Length;
-        if (fill < 0) { t = Fit(t, PanelInner - 1); fill = 0; }
+        if (fill < 0) { t = Fit($"░▒ {title}", PanelInner - 1); fill = 0; }
         Write(ConsoleColor.Gray, Prefix + "╭─");
         Write(titleColor, t);
         WriteLine(ConsoleColor.Gray, new string('─', fill) + "╮");
@@ -363,9 +363,9 @@ static class Ui
 
     private static void RoundedMid(string label, ConsoleColor labelColor)
     {
-        string l = $"[ {label} ]";
+        string l = $"◆ {label} ◆";
         int fill = PanelInner - 1 - l.Length;
-        if (fill < 0) { l = Fit(l, PanelInner - 1); fill = 0; }
+        if (fill < 0) { l = Fit($"◆ {label}", PanelInner - 1); fill = 0; }
         Write(ConsoleColor.Gray, Prefix + "├─");
         Write(labelColor, l);
         WriteLine(ConsoleColor.Gray, new string('─', fill) + "┤");
@@ -383,8 +383,8 @@ static class Ui
     {
         // Two-column HUD row inside rounded panel
         int half = (PanelInner - 3) / 2; // " │ " separator in middle
-        string left = Fit($" {l1,-5}: {v1}", half).PadRight(half);
-        string right = Fit($" {l2,-5}: {v2}", PanelInner - 3 - half).PadRight(PanelInner - 3 - half);
+        string left = Fit($" {l1,-5}▸ {v1}", half).PadRight(half);
+        string right = Fit($" {l2,-5}▸ {v2}", PanelInner - 3 - half).PadRight(PanelInner - 3 - half);
 
         Write(ConsoleColor.Gray, Prefix + "│");
         Write(c1, left);
@@ -422,11 +422,11 @@ static class Ui
 
         public void Cmd(string text)
         {
-            string prefix = "  node@pcspkr:~$ ";
+            string prefix = "  pcspkr:~$ ";
             string content = Fit(prefix + text, _inner).PadRight(_inner);
             Write(ConsoleColor.Gray, Prefix + "│");
             // colorize prompt parts
-            string p1 = "  node@pcspkr";
+            string p1 = "  pcspkr";
             string p2 = ":";
             string p3 = "~";
             string p4 = "$ ";
@@ -502,9 +502,9 @@ static class Ui
 
     private static void DBoxTopCustom(string title, int inner, ConsoleColor titleColor)
     {
-        string t = $"[ {title} ]";
+        string t = $"◢ {title} ◣";
         int fill = inner - 1 - t.Length;
-        if (fill < 0) { t = Fit(t, inner - 1); fill = 0; }
+        if (fill < 0) { t = Fit($"◢ {title}", inner - 1); fill = 0; }
         Write(ConsoleColor.Gray, Prefix + "╔═");
         Write(titleColor, t);
         WriteLine(ConsoleColor.Gray, new string('═', fill) + "╗");
@@ -514,7 +514,15 @@ static class Ui
 
     private static void DBoxSepCustom(int inner)
     {
-        WriteLine(ConsoleColor.Gray, Prefix + "╠" + new string('═', inner) + "╣");
+        if (inner < 3)
+        {
+            WriteLine(ConsoleColor.Gray, Prefix + "╠" + new string('═', inner) + "╣");
+            return;
+        }
+
+        char[] fill = new string('═', inner).ToCharArray();
+        fill[inner / 2] = '◆';
+        WriteLine(ConsoleColor.Gray, Prefix + "╠" + new string(fill) + "╣");
     }
 
     private static void DBoxSepText(string text, int inner, ConsoleColor color)
@@ -531,12 +539,20 @@ static class Ui
 
     private static void DBoxBottomCustom(int inner)
     {
-        WriteLine(ConsoleColor.Gray, Prefix + "╚" + new string('═', inner) + "╝");
+        if (inner < 3)
+        {
+            WriteLine(ConsoleColor.Gray, Prefix + "╚" + new string('═', inner) + "╝");
+            return;
+        }
+
+        char[] fill = new string('═', inner).ToCharArray();
+        fill[inner / 2] = '◆';
+        WriteLine(ConsoleColor.Gray, Prefix + "╚" + new string(fill) + "╝");
     }
 
     private static void DBoxRow(string label, string value, ConsoleColor valueColor)
     {
-        string l = $" {label,-10}: ";
+        string l = $" {label,-10}▸ ";
         string content = Fit(value, PanelInner - l.Length).PadRight(PanelInner - l.Length);
         Write(ConsoleColor.Gray, Prefix + "║");
         Write(ConsoleColor.Cyan, l);
@@ -546,8 +562,8 @@ static class Ui
 
     private static void Tape(string text, ConsoleColor a, ConsoleColor b)
     {
-        const string left = "══[ ";
-        const string right = " ]══";
+        const string left = "░▒▓[ ";
+        const string right = " ]▓▒░";
         int inner = PanelWidth - left.Length - right.Length;
         if (inner < 8) inner = 8;
         string body = Fit(text, inner);

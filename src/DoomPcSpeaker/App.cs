@@ -221,16 +221,16 @@ static class App
                 Ui.PrintBanner(compact: true, availabilityError);
                 if (availabilityError is null)
                 {
-                    Ui.Dim("  cmds   :: list  help  cls  stop");
-                    Ui.Dim("  input  :: id / key / name / random");
-                    Ui.Dim("  queue  :: delimit with ',' ';' or space");
-                    Ui.Dim("  exit   :: 0 / q / quit / exit");
+                    Ui.Dim("  [SYS] cmds   :: list  help  cls  stop");
+                    Ui.Dim("  [SYS] input  :: id / key / name / random");
+                    Ui.Dim("  [SYS] queue  :: delimit with ',' ';' or space");
+                    Ui.Dim("  [SYS] exit   :: 0 / q / quit / exit");
                 }
                 else
                 {
-                    Ui.Dim("  mode   :: playback disabled / read-only shell");
-                    Ui.Dim("  allow  :: list  help  cls  stop  0/q");
-                    Ui.Dim("  action :: restore driver/access and restart the app");
+                    Ui.Dim("  [SYS] mode   :: playback disabled / read-only shell");
+                    Ui.Dim("  [SYS] allow  :: list  help  cls  stop  0/q");
+                    Ui.Dim("  [SYS] action :: restore driver/access and restart the app");
                 }
                 Console.WriteLine();
 
