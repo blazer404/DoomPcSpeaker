@@ -102,7 +102,7 @@ BROKEN
 - **DoomPcSpeaker** — консольное приложение (.NET 9, Windows x64) для воспроизведения мелодий через hardware PC speaker (i8254 PIT, порты `0x43/0x42/0x61`) с использованием `inpoutx64.dll`.
 - Исходники: `src/DoomPcSpeaker/` (`Program.cs`, `App.cs`, `Ui.cs`, `PcSpeaker.cs`, `Melodies.cs`)
 - Решение: `DoomPcSpeaker.sln` (сборка: `RebuildSolution.bat`)
-- Локальные зависимости (например, `inpoutx64.dll`) — в `_dependencies/` (git-ignored, `_*/`)
+- Сторонние библиотеки (например, InpOut/x64 `inpoutx64.dll`) — в `res/libs/<lib>/`, при сборке копируются в output
 - Аппаратное воспроизведение (портовый I/O, права администратора) не запускать без явного запроса.
 
 ---

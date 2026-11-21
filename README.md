@@ -24,18 +24,19 @@ dotnet build .\DoomPcSpeaker.sln -c Release
 ```text
 DoomPcSpeaker.exe                 интерактивный режим
 DoomPcSpeaker.exe doom            проиграть трек
-DoomPcSpeaker.exe 7,3,14          очередь треков
+DoomPcSpeaker.exe tetris,mario    очередь треков
 DoomPcSpeaker.exe random          случайный трек
 DoomPcSpeaker.exe --list          список треков
 DoomPcSpeaker.exe --stop          заглушить спикер
 DoomPcSpeaker.exe --help          справка
 ```
 
-В интерактивном режиме: ввод по id/key/имени, очередь через `,`/`;`/пробел, команды `list`, `help`, `cls`, `stop`, выход `0`/`q`, прерывание `Ctrl+C`.
+В интерактивном режиме: ввод по ключу трека, очередь через `,`/`;`/пробел, команды `list/l`, `help/h`, `clear/c`, `stop/s`, `quit/q`, `random/r`, прерывание `Ctrl+C`.
 
 ## Структура
 
 - `src/DoomPcSpeaker/` — исходники проекта
-- `res/` — ресурсы
-- `_dependencies/` — локальные зависимости (в git не попадают)
+- `res/melodies/` — мелодии в формате `.dpsm` (копируются в output при сборке)
+- `res/libs/inpout/` — сторонняя библиотека InpOut (DLL копируется в output при сборке)
+- `_dependencies/` — локальные рабочие материалы (в git не попадают)
 - `DoomPcSpeaker.sln`, `RebuildSolution.bat`
