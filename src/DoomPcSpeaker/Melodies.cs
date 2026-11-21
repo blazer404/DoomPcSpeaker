@@ -382,28 +382,28 @@ static class Melodies
     public static readonly Group[] Groups =
     [
         new("Games", [
-            new("doom",          "DOOM — E1M1 (At Doom's Gate)", Doom),
-            new("tetris",        "Tetris — Korobeiniki", Tetris),
-            new("mario",         "Super Mario Bros — Theme", Mario),
-            new("sonic",         "Sonic 1 — Green Hill Zone", SonicTheme),
-            new("pacman",        "Pac-Man — Intro", PacMan),
-            new("mk",            "Mortal Kombat — Theme", MortalKombat),
-            new("vampirekiller", "Castlevania — Vampire Killer", VampireKiller),
+            new("doom",        "DOOM — E1M1 (At Doom's Gate)", Doom),
+            new("tetris",      "Tetris — Korobeiniki", Tetris),
+            new("mario",       "Super Mario Bros — Theme", Mario),
+            new("sonic",       "Sonic 1 — Green Hill Zone", SonicTheme),
+            new("pacman",      "Pac-Man — Intro", PacMan),
+            new("mk",          "Mortal Kombat — Theme", MortalKombat),
+            new("castlevania", "Castlevania — Vampire Killer", VampireKiller),
         ]),
         new("Movies & Themes", [
-            new("imperial",      "Star Wars — Imperial March", ImperialMarch),
-            new("cantina",       "Star Wars — Cantina Band", Cantina),
-            new("pirates",       "Pirates of the Caribbean — He's a Pirate", Pirates),
-            new("mi",            "Mission Impossible — Theme", MissionImpossible),
-            new("axelf",         "Axel F (Beverly Hills Cop)", AxelF),
-            new("gameofthrones", "Game of Thrones — Theme", GameOfThrones),
-            new("thegodfather",  "The Godfather — Theme", Godfather),
+            new("starwars",  "Star Wars — Imperial March", ImperialMarch),
+            new("cantina",   "Star Wars — Cantina Band", Cantina),
+            new("pirates",   "Pirates of the Caribbean — He's a Pirate", Pirates),
+            new("mi",        "Mission Impossible — Theme", MissionImpossible),
+            new("axelf",     "Axel F (Beverly Hills Cop)", AxelF),
+            new("got",       "Game of Thrones — Theme", GameOfThrones),
+            new("father",    "The Godfather — Theme", Godfather),
         ]),
         new("Fun & Classics", [
-            new("nokia",         "Nokia Tune", Nokia),
-            new("rickroll",      "Rick Astley — Never Gonna Give You Up", Rickroll),
-            new("princeigor",    "Borodin — Prince Igor (Polovtsian)", PrinceIgor),
-            new("jingle",        "Jingle Bells", JingleBells),
+            new("nokia",    "Nokia Tune", Nokia),
+            new("rickroll", "Rick Astley — Never Gonna Give You Up", Rickroll),
+            new("igor",     "Borodin — Prince Igor (Polovtsian)", PrinceIgor),
+            new("jingle",   "Jingle Bells", JingleBells),
         ]),
     ];
 
@@ -416,27 +416,6 @@ static class Melodies
 
         if (IsRandom(q))
             return All[Random.Shared.Next(All.Length)];
-
-        // Input aliases
-        if (q.Equals("pirate", StringComparison.OrdinalIgnoreCase) ||
-            q.Equals("caribbean", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "pirates");
-        if (q.Equals("greenhill", StringComparison.OrdinalIgnoreCase) ||
-            q.Equals("green hill", StringComparison.OrdinalIgnoreCase) ||
-            q.Equals("ghz", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "sonic");
-        if (q.Equals("cantinaband", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "cantina");
-        if (q.Equals("game of thrones", StringComparison.OrdinalIgnoreCase) ||
-            q.Equals("got", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "gameofthrones");
-        if (q.Equals("godfather", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "thegodfather");
-        if (q.Equals("prince igor", StringComparison.OrdinalIgnoreCase) ||
-            q.Equals("igor", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "princeigor");
-        if (q.Equals("castlevania", StringComparison.OrdinalIgnoreCase))
-            return All.FirstOrDefault(s => s.Key == "vampirekiller");
 
         if (int.TryParse(q, out int n) && n >= 1 && n <= All.Length)
             return All[n - 1];

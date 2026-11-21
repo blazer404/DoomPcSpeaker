@@ -233,7 +233,7 @@ static class Ui
             writer.Cmd("DoomPcSpeaker.exe doom");
             writer.Cmd("DoomPcSpeaker.exe 7,13,18");
             writer.Cmd("DoomPcSpeaker.exe doom pirates rickroll");
-            writer.Cmd("DoomPcSpeaker.exe \"got, godfather, vampirekiller\"");
+            writer.Cmd("DoomPcSpeaker.exe \"got, father, castlevania\"");
             writer.Cmd("DoomPcSpeaker.exe random");
             writer.Tip("copypaste like a pro");
         });
