@@ -153,43 +153,52 @@ static class Ui
 
     public static void PrintTable()
     {
-        int keyWidth = Math.Max(12, Melodies.All.Max(m => m.Key.Length));
+        int keyWidth = Melodies.All.Length > 0 ? Math.Max(12, Melodies.All.Max(m => m.Key.Length)) : 12;
         int inner = PanelInner;
-        // inner layout: " [00]  " + key + "  ▸ " + name + " " => 12 + keyWidth + nameWidth
-        int nameWidth = inner - 12 - keyWidth;
+        // inner layout: "  " + key + "  ▸ " + name + " " => 7 + keyWidth + nameWidth
+        int nameWidth = inner - 7 - keyWidth;
         if (nameWidth < 10) nameWidth = 10;
 
         var s = HeavyFrame;
         DBoxTopCustom("TRACKLIST", inner, ConsoleColor.Cyan, s);
 
-        int idx = 1;
-        foreach (var group in Melodies.Groups)
+        if (Melodies.All.Length == 0)
         {
-            string g = $" ▓▒░ {group.Name.ToUpperInvariant()} ░▒▓ ";
-            DBoxSepText(g, inner, ConsoleColor.Magenta, s);
-
-            foreach (var m in group.Tracks)
+            string msg = Fit("  no tracks found — drop .dpsm files into melodies/", inner).PadRight(inner);
+            Write(s.BorderColor, Prefix + s.V);
+            Write(ConsoleColor.Yellow, msg);
+            WriteLine(s.BorderColor, s.V);
+        }
+        else
+        {
+            foreach (var group in Melodies.Groups)
             {
-                string num = idx.ToString("00");
-                string key = Fit(m.Key.ToLowerInvariant(), keyWidth).PadRight(keyWidth);
-                string name = Fit(m.Name, nameWidth).PadRight(nameWidth);
+                if (!string.IsNullOrWhiteSpace(group.Name))
+                {
+                    string g = $" ▓▒░ {group.Name.ToUpperInvariant()} ░▒▓ ";
+                    DBoxSepText(g, inner, ConsoleColor.Magenta, s);
+                }
 
-                Write(s.BorderColor, Prefix + s.V + " ");
-                Write(ConsoleColor.Gray, "[");
-                Write(ConsoleColor.Yellow, num);
-                Write(ConsoleColor.Gray, "]  ");
-                Write(ConsoleColor.Cyan, key);
-                Write(ConsoleColor.Gray, "  ▸ ");
-                Write(ConsoleColor.White, name);
-                WriteLine(s.BorderColor, " " + s.V);
-                idx++;
+                foreach (var m in group.Tracks)
+                {
+                    string key = Fit(m.Key.ToLowerInvariant(), keyWidth).PadRight(keyWidth);
+                    string name = Fit(m.Name, nameWidth).PadRight(nameWidth);
+
+                    Write(s.BorderColor, Prefix + s.V + "  ");
+                    Write(ConsoleColor.Cyan, key);
+                    Write(ConsoleColor.Gray, "  ▸ ");
+                    Write(ConsoleColor.White, name);
+                    WriteLine(s.BorderColor, " " + s.V);
+                }
             }
         }
 
         DBoxSepCustom(inner, s);
-        string footer = Fit($"  {Melodies.All.Length:00} tracks loaded  //  pick: id | key | random", inner).PadRight(inner);
+        string footer = Melodies.All.Length == 0
+            ? Fit("  00 tracks loaded  //  add .dpsm files to melodies/", inner).PadRight(inner)
+            : Fit($"  {Melodies.All.Length:00} tracks loaded  //  pick: key | random", inner).PadRight(inner);
         Write(s.BorderColor, Prefix + s.V);
-        Write(ConsoleColor.Green, footer);
+        Write(Melodies.All.Length == 0 ? ConsoleColor.DarkGray : ConsoleColor.Green, footer);
         WriteLine(s.BorderColor, s.V);
         DBoxBottomCustom(inner, s);
     }
@@ -216,7 +225,7 @@ static class Ui
         FramedPanel(DoubleFrame, "CONTROLS", ConsoleColor.Magenta, writer =>
         {
             writer.Section("ACTIONS", ConsoleColor.DarkYellow);
-            writer.Kv("play", "enter track number or key");
+            writer.Kv("play", "enter track key (from tracklist)");
             writer.Kv("queue", "separate tracks with comma, semicolon, or space");
             writer.Kv("Ctrl+C", "stop playback/queue; if idle, exit the app");
             writer.Section("COMMANDS", ConsoleColor.DarkCyan);
@@ -233,7 +242,7 @@ static class Ui
         {
             writer.Cmd("DoomPcSpeaker.exe");
             writer.Cmd("DoomPcSpeaker.exe doom");
-            writer.Cmd("DoomPcSpeaker.exe 7,13,18");
+            writer.Cmd("DoomPcSpeaker.exe tetris,mario,sonic");
             writer.Cmd("DoomPcSpeaker.exe doom pirates rickroll");
             writer.Cmd("DoomPcSpeaker.exe \"got, father, castlevania\"");
             writer.Cmd("DoomPcSpeaker.exe random");
@@ -258,7 +267,7 @@ static class Ui
             Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Green, "INPUT:READY");
             Write(ConsoleColor.Gray, "]─[");
-            Write(ConsoleColor.Magenta, "id/key/random/queue");
+            Write(ConsoleColor.Magenta, "key/random/queue");
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");

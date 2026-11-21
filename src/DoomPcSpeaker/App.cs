@@ -39,7 +39,6 @@ static class App
                 }
 
                 if (IsHelpArg(effectiveArgs[0])) { Ui.PrintHelp(PcSpeaker.CheckAvailability()); return 0; }
-                if (IsListArg(effectiveArgs[0])) { Ui.PrintBanner(compact: true, PcSpeaker.CheckAvailability()); Ui.PrintTable(); return 0; }
                 if (IsStopArg(effectiveArgs[0]))
                 {
                     string? avail = PcSpeaker.CheckAvailability();
@@ -56,14 +55,21 @@ static class App
                     Ui.Dim("  " + avail);
                     return 1;
                 }
+                if (Melodies.LoadError is not null) { Ui.Error(Melodies.LoadError); return 1; }
+                if (IsListArg(effectiveArgs[0])) { Ui.PrintBanner(compact: true, PcSpeaker.CheckAvailability()); Ui.PrintTable(); return 0; }
 
                 var queries = QueriesFromArgs(effectiveArgs);
 
                 var (songs, errors) = ResolveAll(queries);
                 if (errors.Count > 0)
                 {
-                    Ui.Error("not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  (nice try)");
-                    Ui.Dim("  use --list to see what actually exists");
+                    if (Melodies.All.Length == 0 && errors.Any(e => IsRandomKeyword(e)))
+                        Ui.Error("no tracks loaded — add .dpsm files to melodies/");
+                    else
+                    {
+                        Ui.Error("not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  (nice try)");
+                        Ui.Dim("  use --list to see what actually exists");
+                    }
                     return 1;
                 }
 
@@ -97,9 +103,10 @@ static class App
     {
         Ui.ClearScreen();
 
-        string? status = null;
-        bool statusOk = true;
+        string? status = Melodies.LoadError;
+        bool statusOk = Melodies.LoadError is null;
         string? availabilityError = PcSpeaker.CheckAvailability();
+        string? melodyError = Melodies.LoadError;
         View view = View.Main;
 
         while (true)
@@ -147,12 +154,22 @@ static class App
                 continue;
             }
 
+            if (melodyError is not null)
+            {
+                status = melodyError;
+                statusOk = false;
+                continue;
+            }
+
             var playInput = StripPlayPrefix(input);
             var queries = SmartSplit(playInput);
             var (songs, errors) = ResolveAll(queries);
             if (errors.Count > 0)
             {
-                status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  nice try, use 'help'";
+                if (Melodies.All.Length == 0 && errors.Any(e => IsRandomKeyword(e)))
+                    status = "no tracks loaded — add .dpsm files to melodies/";
+                else
+                    status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  nice try, use 'help'";
                 statusOk = false;
                 continue;
             }
