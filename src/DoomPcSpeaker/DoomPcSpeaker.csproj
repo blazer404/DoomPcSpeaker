@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="DoomPcSpeaker.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\..\res\melodies\*.dpsm" Link="melodies\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
