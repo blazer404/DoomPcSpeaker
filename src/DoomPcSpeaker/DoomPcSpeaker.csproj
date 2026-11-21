@@ -11,6 +11,9 @@
     <None Include="..\..\res\melodies\*.dpsm" Link="melodies\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\res\libs\inpout\inpoutx64.dll" Link="inpoutx64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
