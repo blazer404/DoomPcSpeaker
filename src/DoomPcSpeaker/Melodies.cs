@@ -420,12 +420,7 @@ static class Melodies
         if (int.TryParse(q, out int n) && n >= 1 && n <= All.Length)
             return All[n - 1];
 
-        var exact = All.FirstOrDefault(s => s.Key.Equals(q, StringComparison.OrdinalIgnoreCase));
-        if (exact is not null) return exact;
-
-        return All.FirstOrDefault(s =>
-            s.Key.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-            s.Name.Contains(q, StringComparison.OrdinalIgnoreCase));
+        return All.FirstOrDefault(s => s.Key.Equals(q, StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool IsRandom(string q) =>

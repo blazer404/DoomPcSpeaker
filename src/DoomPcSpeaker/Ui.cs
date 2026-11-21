@@ -131,7 +131,7 @@ static class Ui
         if (!compact)
         {
             DBoxSep();
-            DBoxRow("input", "id / key / name fragment / alias (type like you mean it)", ConsoleColor.White);
+            DBoxRow("input", "id / key (type like you mean it)", ConsoleColor.White);
             DBoxRow("queue", "separate tracks with ',' ';' or space (go wild)", ConsoleColor.White);
             DBoxRow("cmds", "list, help, clear, stop, quit, random", ConsoleColor.DarkGray);
             DBoxRow("abort", "Ctrl+C stops playback/queue (panic button, session lives)", ConsoleColor.Red);
@@ -185,7 +185,7 @@ static class Ui
         }
 
         DBoxSepCustom(inner, s);
-        string footer = Fit($"  {Melodies.All.Length:00} tracks loaded  //  pick: id | key | name | random", inner).PadRight(inner);
+        string footer = Fit($"  {Melodies.All.Length:00} tracks loaded  //  pick: id | key | random", inner).PadRight(inner);
         Write(s.BorderColor, Prefix + s.V);
         Write(ConsoleColor.Green, footer);
         WriteLine(s.BorderColor, s.V);
@@ -214,7 +214,7 @@ static class Ui
         FramedPanel(DoubleFrame, "CONTROLS", ConsoleColor.Magenta, writer =>
         {
             writer.Section("ACTIONS", ConsoleColor.DarkYellow);
-            writer.Kv("play", "enter track number, key, name fragment, or alias");
+            writer.Kv("play", "enter track number or key");
             writer.Kv("queue", "separate tracks with comma, semicolon, or space");
             writer.Kv("Ctrl+C", "stop playback/queue; if idle, exit the app");
             writer.Section("COMMANDS", ConsoleColor.DarkCyan);
@@ -256,7 +256,7 @@ static class Ui
             Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Green, "INPUT:READY");
             Write(ConsoleColor.Gray, "]─[");
-            Write(ConsoleColor.Magenta, "id/key/name/random/queue");
+            Write(ConsoleColor.Magenta, "id/key/random/queue");
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");
