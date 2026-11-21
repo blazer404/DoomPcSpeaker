@@ -2,32 +2,55 @@ using System.Runtime.InteropServices;
 
 static class PcSpeaker
 {
-    [DllImport("inpoutx64.dll", EntryPoint = "Out32")]
+    private const string LibraryName = "inpoutx64.dll";
+    internal const string DriverMarker = "inpoutx64.dll";
+
+    private const int ControlPort = 0x43;
+    private const int CounterPort = 0x42;
+    private const int SystemPort = 0x61;
+    private const int PitClockHz = 1193180;
+    private const int SquareWaveControlWord = 0xB6;
+    private const int SpeakerEnableBits = 0x03;
+    private const int SpeakerDisableMask = 0xFC;
+    private const int LowByteMask = 0xFF;
+    private const int ByteShift = 8;
+    private const int ArticulationThresholdMs = 20;
+    private const int ArticulationGapMs = 3;
+    private const int SleepChunkMs = 20;
+
+    private const string DriverMissingMessage = DriverMarker + " not found next to exe";
+    private const string DriverArchitectureMessage = DriverMarker + " wrong architecture (x64 required)";
+
+    [DllImport(LibraryName, EntryPoint = "Out32")]
     public static extern void Out32(int portAddress, int data);
 
-    [DllImport("inpoutx64.dll", EntryPoint = "Inp32")]
+    [DllImport(LibraryName, EntryPoint = "Inp32")]
     public static extern int Inp32(int portAddress);
 
     public static string? CheckAvailability()
     {
         try
         {
-            _ = Inp32(0x61);
+            _ = Inp32(SystemPort);
             return null;
         }
         catch (DllNotFoundException)
         {
-            return "inpoutx64.dll not found next to exe";
+            return DriverMissingMessage;
         }
         catch (BadImageFormatException)
         {
-            return "inpoutx64.dll wrong architecture (x64 required)";
+            return DriverArchitectureMessage;
         }
         catch (Exception ex)
         {
             return "port access denied: " + ex.Message + " (run as Administrator)";
         }
     }
+
+    public static bool NeedsDriverHint(string? availabilityError) =>
+        availabilityError is not null &&
+        availabilityError.Contains(DriverMarker, StringComparison.OrdinalIgnoreCase);
 
     public static void Play(int frequency, int durationMs, CancellationToken token)
     {
@@ -37,22 +60,21 @@ static class PcSpeaker
             return;
         }
 
-        int divisor = 1193180 / frequency;
-        if (divisor <= 0) divisor = 1;
+        int divisor = Math.Max(1, PitClockHz / frequency);
 
         // Keep overall tempo: short articulation gap is included in note duration.
-        int gapMs = durationMs >= 20 ? 3 : 0;
+        int gapMs = durationMs >= ArticulationThresholdMs ? ArticulationGapMs : 0;
         int playMs = Math.Max(1, durationMs - gapMs);
 
         try
         {
-            Out32(0x43, 0xB6);
-            Out32(0x42, divisor & 0xFF);
-            Out32(0x42, (divisor >> 8) & 0xFF);
+            Out32(ControlPort, SquareWaveControlWord);
+            Out32(CounterPort, divisor & LowByteMask);
+            Out32(CounterPort, (divisor >> ByteShift) & LowByteMask);
 
-            int tmp = Inp32(0x61);
-            if ((tmp & 0x03) != 0x03)
-                Out32(0x61, tmp | 0x03);
+            int state = Inp32(SystemPort);
+            if ((state & SpeakerEnableBits) != SpeakerEnableBits)
+                Out32(SystemPort, state | SpeakerEnableBits);
 
             SleepWithCancel(playMs, token);
         }
@@ -70,12 +92,11 @@ static class PcSpeaker
     {
         try
         {
-            int tmp = Inp32(0x61) & 0xFC;
-            Out32(0x61, tmp);
+            Out32(SystemPort, Inp32(SystemPort) & SpeakerDisableMask);
         }
-        catch
+        catch (Exception)
         {
-            // ignore: ProcessExit/DllNotFound/etc.
+            // Best-effort mute: also runs at process exit when the driver is unavailable.
         }
     }
 
@@ -84,9 +105,8 @@ static class PcSpeaker
         int remaining = ms;
         while (remaining > 0 && !token.IsCancellationRequested)
         {
-            int chunk = Math.Min(20, remaining);
-            try { Thread.Sleep(chunk); }
-            catch { break; }
+            int chunk = Math.Min(SleepChunkMs, remaining);
+            Thread.Sleep(chunk);
             remaining -= chunk;
         }
     }

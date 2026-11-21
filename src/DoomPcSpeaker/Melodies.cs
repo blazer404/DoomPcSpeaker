@@ -5,49 +5,83 @@ static class Melodies
     public sealed record Song(string Key, string Name, string Group, (int freq, int ms)[] Notes);
     public sealed record Group(string Name, Song[] Tracks);
 
+    private static readonly string[] KeyProperties = ["key", "alias", "id"];
+    private static readonly string[] NameProperties = ["name", "title"];
+    private static readonly string[] GroupProperties = ["group", "category"];
+    private static readonly string[] NotesProperties = ["notes", "melody"];
+    private static readonly string[] FrequencyProperties = ["freq", "f"];
+    private static readonly string[] DurationProperties = ["ms", "d", "duration"];
+
+    public static readonly MelodyCatalog Catalog;
     public static readonly Group[] Groups;
     public static readonly Song[] All;
     public static readonly string? LoadError;
 
     static Melodies()
     {
-        var (groups, all, error) = Load();
-        Groups = groups;
-        All = all;
+        var (catalog, error) = Load();
+        Catalog = catalog;
+        Groups = catalog.Groups;
+        All = catalog.All;
         LoadError = error;
     }
 
-    public static Song? Resolve(string query)
+    public static Song? Resolve(string query) => Catalog.Resolve(query);
+
+    internal static bool IsRandom(string query) =>
+        query.Equals("random", StringComparison.OrdinalIgnoreCase) ||
+        query.Equals("r", StringComparison.OrdinalIgnoreCase);
+
+    internal static (Song? Song, string? Error) ParseJson(string json, string fileName)
     {
-        var q = query.Trim();
-        if (q.Length == 0) return null;
+        JsonDocument document;
+        try
+        {
+            document = JsonDocument.Parse(json);
+        }
+        catch (JsonException ex)
+        {
+            return (null, $"invalid JSON in '{fileName}': {ex.Message}");
+        }
 
-        if (IsRandom(q))
-            return All.Length == 0 ? null : All[Random.Shared.Next(All.Length)];
+        using (document)
+        {
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                return (null, $"invalid melody file '{fileName}': root must be a JSON object");
 
-        return All.FirstOrDefault(s => s.Key.Equals(q, StringComparison.OrdinalIgnoreCase));
+            string? key = GetFirstString(root, KeyProperties);
+            string? name = GetFirstString(root, NameProperties);
+            string group = GetFirstString(root, GroupProperties) ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(key))
+                return (null, $"invalid melody file '{fileName}': missing 'key'");
+            if (string.IsNullOrWhiteSpace(name))
+                return (null, $"invalid melody file '{fileName}': missing 'name'");
+
+            if (!TryGetNotes(root, out var notes, out string? notesError))
+                return (null, $"invalid melody file '{fileName}': {notesError}");
+
+            return (new Song(key.Trim(), name.Trim(), group.Trim(), notes), null);
+        }
     }
 
-    private static bool IsRandom(string q) =>
-        q.Equals("random", StringComparison.OrdinalIgnoreCase) ||
-        q.Equals("r", StringComparison.OrdinalIgnoreCase);
-
-    private static (Group[] Groups, Song[] All, string? Error) Load()
+    private static (MelodyCatalog Catalog, string? Error) Load()
     {
-        string? dir = FindMelodyDir();
-        if (dir is null)
-            return ([], [], null);
+        string? directory = FindMelodyDir();
+        if (directory is null)
+            return (new MelodyCatalog([]), null);
 
         string[] files;
         try
         {
-            files = Directory.GetFiles(dir, "*.dpsm", SearchOption.TopDirectoryOnly)
+            files = Directory.GetFiles(directory, "*.dpsm", SearchOption.TopDirectoryOnly)
                 .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
                 .ToArray();
         }
         catch (Exception ex)
         {
-            return ([], [], $"failed to read melody directory '{dir}': {ex.Message}");
+            return (new MelodyCatalog([]), $"failed to read melody directory '{directory}': {ex.Message}");
         }
 
         var songs = new List<Song>();
@@ -58,23 +92,18 @@ static class Melodies
                 songs.Add(song);
         }
 
-        var groups = songs
-            .GroupBy(s => s.Group, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new Group(g.First().Group, g.ToArray()))
-            .ToArray();
-
-        return (groups, songs.ToArray(), null);
+        return (new MelodyCatalog(songs), null);
     }
 
     private static string? FindMelodyDir()
     {
-        string baseDir = AppContext.BaseDirectory;
-        string dir = Path.Combine(baseDir, "melodies");
-        return Directory.Exists(dir) ? dir : null;
+        string directory = Path.Combine(AppContext.BaseDirectory, "melodies");
+        return Directory.Exists(directory) ? directory : null;
     }
 
     private static (Song? Song, string? Error) ParseFile(string file)
     {
+        string fileName = Path.GetFileName(file);
         string json;
         try
         {
@@ -82,50 +111,28 @@ static class Melodies
         }
         catch (Exception ex)
         {
-            return (null, $"failed to read '{Path.GetFileName(file)}': {ex.Message}");
+            return (null, $"failed to read '{fileName}': {ex.Message}");
         }
 
-        JsonDocument doc;
-        try
-        {
-            doc = JsonDocument.Parse(json);
-        }
-        catch (JsonException ex)
-        {
-            return (null, $"invalid JSON in '{Path.GetFileName(file)}': {ex.Message}");
-        }
-
-        using (doc)
-        {
-            var root = doc.RootElement;
-            if (root.ValueKind != JsonValueKind.Object)
-                return (null, $"invalid melody file '{Path.GetFileName(file)}': root must be a JSON object");
-
-            string? key = GetString(root, "key") ?? GetString(root, "alias") ?? GetString(root, "id");
-            string? name = GetString(root, "name") ?? GetString(root, "title");
-            string group = GetString(root, "group") ?? GetString(root, "category") ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(key))
-                return (null, $"invalid melody file '{Path.GetFileName(file)}': missing 'key'");
-            if (string.IsNullOrWhiteSpace(name))
-                return (null, $"invalid melody file '{Path.GetFileName(file)}': missing 'name'");
-
-            key = key.Trim();
-            name = name.Trim();
-            group = group.Trim();
-
-            if (!TryGetNotes(root, out var notes, out string? notesError))
-                return (null, $"invalid melody file '{Path.GetFileName(file)}': {notesError}");
-
-            return (new Song(key, name, group, notes), null);
-        }
+        return ParseJson(json, fileName);
     }
 
-    private static string? GetString(JsonElement obj, string prop)
+    private static string? GetFirstString(JsonElement obj, string[] properties)
     {
-        if (!obj.TryGetProperty(prop, out var el)) return null;
-        if (el.ValueKind != JsonValueKind.String) return null;
-        return el.GetString();
+        foreach (string property in properties)
+        {
+            string? value = GetString(obj, property);
+            if (!string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+        return null;
+    }
+
+    private static string? GetString(JsonElement obj, string property)
+    {
+        if (!obj.TryGetProperty(property, out var element)) return null;
+        if (element.ValueKind != JsonValueKind.String) return null;
+        return element.GetString();
     }
 
     private static bool TryGetNotes(JsonElement root, out (int freq, int ms)[] notes, out string? error)
@@ -133,54 +140,62 @@ static class Melodies
         notes = [];
         error = null;
 
-        if (!root.TryGetProperty("notes", out var notesEl) && !root.TryGetProperty("melody", out notesEl))
+        JsonElement notesElement = default;
+        bool found = false;
+        foreach (string property in NotesProperties)
+        {
+            if (root.TryGetProperty(property, out notesElement))
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
         {
             error = "missing 'notes'";
             return false;
         }
 
-        if (notesEl.ValueKind != JsonValueKind.Array)
+        if (notesElement.ValueKind != JsonValueKind.Array)
         {
             error = "'notes' must be an array";
             return false;
         }
 
-        var list = new List<(int freq, int ms)>(notesEl.GetArrayLength());
-        int i = 0;
-        foreach (var item in notesEl.EnumerateArray())
+        var list = new List<(int freq, int ms)>(notesElement.GetArrayLength());
+        int index = 0;
+        foreach (var item in notesElement.EnumerateArray())
         {
-            i++;
+            index++;
             if (item.ValueKind == JsonValueKind.Array)
             {
-                int len = item.GetArrayLength();
-                if (len < 2)
+                if (item.GetArrayLength() < 2)
                 {
-                    error = $"note #{i}: expected [freq, ms]";
+                    error = $"note #{index}: expected [freq, ms]";
                     return false;
                 }
 
-                if (!TryGetInt(item[0], out int freq) || !TryGetInt(item[1], out int ms))
+                if (!TryGetInt(item[0], out int frequency) || !TryGetInt(item[1], out int ms))
                 {
-                    error = $"note #{i}: freq and ms must be integers";
+                    error = $"note #{index}: freq and ms must be integers";
                     return false;
                 }
 
-                list.Add((freq, ms));
+                list.Add((frequency, ms));
             }
             else if (item.ValueKind == JsonValueKind.Object)
             {
-                bool hasFreq = TryGetIntProp(item, "freq", out int freq) || TryGetIntProp(item, "f", out freq);
-                bool hasMs = TryGetIntProp(item, "ms", out int ms) || TryGetIntProp(item, "d", out ms) || TryGetIntProp(item, "duration", out ms);
-                if (!hasFreq || !hasMs)
+                if (!TryGetFirstInt(item, FrequencyProperties, out int frequency) ||
+                    !TryGetFirstInt(item, DurationProperties, out int ms))
                 {
-                    error = $"note #{i}: expected object with freq/ms";
+                    error = $"note #{index}: expected object with freq/ms";
                     return false;
                 }
-                list.Add((freq, ms));
+                list.Add((frequency, ms));
             }
             else
             {
-                error = $"note #{i}: expected [freq, ms] or object";
+                error = $"note #{index}: expected [freq, ms] or object";
                 return false;
             }
         }
@@ -195,17 +210,54 @@ static class Melodies
         return true;
     }
 
-    private static bool TryGetInt(JsonElement el, out int value)
+    private static bool TryGetFirstInt(JsonElement obj, string[] properties, out int value)
     {
-        if (el.ValueKind == JsonValueKind.Number && el.TryGetInt32(out value))
+        foreach (string property in properties)
+        {
+            if (TryGetIntProp(obj, property, out value))
+                return true;
+        }
+        value = 0;
+        return false;
+    }
+
+    private static bool TryGetInt(JsonElement element, out int value)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out value))
             return true;
         value = 0;
         return false;
     }
 
-    private static bool TryGetIntProp(JsonElement obj, string prop, out int value)
+    private static bool TryGetIntProp(JsonElement obj, string property, out int value)
     {
         value = 0;
-        return obj.TryGetProperty(prop, out var el) && TryGetInt(el, out value);
+        return obj.TryGetProperty(property, out var element) && TryGetInt(element, out value);
+    }
+}
+
+internal sealed class MelodyCatalog
+{
+    public MelodyCatalog(IEnumerable<Melodies.Song> songs)
+    {
+        All = songs.ToArray();
+        Groups = All
+            .GroupBy(song => song.Group, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new Melodies.Group(group.First().Group, group.ToArray()))
+            .ToArray();
+    }
+
+    public Melodies.Group[] Groups { get; }
+    public Melodies.Song[] All { get; }
+
+    public Melodies.Song? Resolve(string query)
+    {
+        string normalized = query.Trim();
+        if (normalized.Length == 0) return null;
+
+        if (Melodies.IsRandom(normalized))
+            return All.Length == 0 ? null : All[Random.Shared.Next(All.Length)];
+
+        return Array.Find(All, song => song.Key.Equals(normalized, StringComparison.OrdinalIgnoreCase));
     }
 }
