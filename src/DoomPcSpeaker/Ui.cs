@@ -133,7 +133,7 @@ static class Ui
             DBoxSep();
             DBoxRow("input", "id / key / name fragment / alias (type like you mean it)", ConsoleColor.White);
             DBoxRow("queue", "separate tracks with ',' ';' or space (go wild)", ConsoleColor.White);
-            DBoxRow("cmds", "list | help | cls | stop | 0/q exit (the usual suspects)", ConsoleColor.DarkGray);
+            DBoxRow("cmds", "list, help, clear, stop, quit, random", ConsoleColor.DarkGray);
             DBoxRow("abort", "Ctrl+C stops playback/queue (panic button, session lives)", ConsoleColor.Red);
         }
 
@@ -204,9 +204,9 @@ static class Ui
         {
             writer.Row("DoomPcSpeaker.exe", "launch interactive shell");
             writer.Row("DoomPcSpeaker.exe <tracks>", "play track(s) directly and exit");
-            writer.Row("DoomPcSpeaker.exe --list", "print full track database");
-            writer.Row("DoomPcSpeaker.exe --stop", "mute speaker / clear port state");
-            writer.Row("DoomPcSpeaker.exe --help", "show this help");
+            writer.Row("DoomPcSpeaker.exe -l, --list", "print full track database");
+            writer.Row("DoomPcSpeaker.exe -s, --stop", "mute speaker / clear port state");
+            writer.Row("DoomPcSpeaker.exe -h, --help", "show this help");
         });
         Console.WriteLine();
 
@@ -217,12 +217,12 @@ static class Ui
             writer.Kv("queue", "separate tracks with comma, semicolon, or space");
             writer.Kv("Ctrl+C", "stop playback/queue; if idle, exit the app");
             writer.Section("COMMANDS", ConsoleColor.DarkCyan);
-            writer.Kv("random", "play a random track (aliases: random/rnd/rand/shuffle)");
-            writer.Kv("list", "show tracklist (aliases: list / l / ls)");
-            writer.Kv("help", "show this help (aliases: help / h / ?)");
-            writer.Kv("clear", "clear screen and return to main view (cls / clear)");
-            writer.Kv("stop", "silence the speaker (stop / mute)");
-            writer.Kv("exit", "quit the app (0 / q / quit / exit)");
+            writer.Kv("random", "play a random track (aliases: random, r)");
+            writer.Kv("list", "show tracklist (aliases: list, l)");
+            writer.Kv("help", "show this help (aliases: help, h)");
+            writer.Kv("clear", "clear screen (aliases: clear, c)");
+            writer.Kv("stop", "silence speaker (aliases: stop, s)");
+            writer.Kv("quit", "quit the app (aliases: quit, q)");
         });
         Console.WriteLine();
 
@@ -269,7 +269,7 @@ static class Ui
             Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Red, "INPUT:LOCKED");
             Write(ConsoleColor.Gray, "]─[");
-            Write(ConsoleColor.Yellow, "list/help/cls/stop/0");
+            Write(ConsoleColor.Yellow, "list/help/clear/stop/quit");
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");

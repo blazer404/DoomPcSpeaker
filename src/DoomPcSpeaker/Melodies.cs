@@ -451,7 +451,5 @@ static class Melodies
 
     private static bool IsRandom(string q) =>
         q.Equals("random", StringComparison.OrdinalIgnoreCase) ||
-        q.Equals("rnd", StringComparison.OrdinalIgnoreCase) ||
-        q.Equals("rand", StringComparison.OrdinalIgnoreCase) ||
-        q.Equals("shuffle", StringComparison.OrdinalIgnoreCase);
+        q.Equals("r", StringComparison.OrdinalIgnoreCase);
 }

@@ -31,10 +31,16 @@ static class App
             // Direct mode: DoomPcSpeaker.exe doom
             if (args.Length > 0)
             {
-                if (args[0] == "0") return 0;
-                if (IsHelp(args[0])) { Ui.PrintHelp(PcSpeaker.CheckAvailability()); return 0; }
-                if (IsList(args[0])) { Ui.PrintBanner(compact: true, PcSpeaker.CheckAvailability()); Ui.PrintTable(); return 0; }
-                if (IsStop(args[0]))
+                var effectiveArgs = StripPlayArgPrefix(args);
+                if (effectiveArgs.Length == 0)
+                {
+                    Ui.Error("no tracks specified :: give me something to beep, try --list");
+                    return 1;
+                }
+
+                if (IsHelpArg(effectiveArgs[0])) { Ui.PrintHelp(PcSpeaker.CheckAvailability()); return 0; }
+                if (IsListArg(effectiveArgs[0])) { Ui.PrintBanner(compact: true, PcSpeaker.CheckAvailability()); Ui.PrintTable(); return 0; }
+                if (IsStopArg(effectiveArgs[0]))
                 {
                     string? avail = PcSpeaker.CheckAvailability();
                     PcSpeaker.Stop();
@@ -51,12 +57,7 @@ static class App
                     return 1;
                 }
 
-                var queries = QueriesFromArgs(args);
-                if (queries.Length == 0)
-                {
-                    Ui.Error("no tracks specified :: give me something to beep, try --list");
-                    return 1;
-                }
+                var queries = QueriesFromArgs(effectiveArgs);
 
                 var (songs, errors) = ResolveAll(queries);
                 if (errors.Count > 0)
@@ -117,13 +118,12 @@ static class App
                 continue;
             }
 
-            string cmd = input.ToLowerInvariant();
-            if (cmd is "0" or "q" or "quit" or "exit") break;
-            if (cmd is "l" or "ls" or "list") { view = View.List; continue; }
-            if (cmd is "cls" or "clear") { view = View.Main; status = null; continue; }
-            if (cmd is "h" or "help" or "?") { view = View.Help; continue; }
+            if (IsExitCmd(input)) break;
+            if (IsListCmd(input)) { view = View.List; continue; }
+            if (IsClearCmd(input)) { view = View.Main; status = null; continue; }
+            if (IsHelpCmd(input)) { view = View.Help; continue; }
 
-            if (cmd is "stop" or "mute")
+            if (IsStopCmd(input))
             {
                 PcSpeaker.Stop();
                 status = availabilityError is null
@@ -141,7 +141,8 @@ static class App
                 continue;
             }
 
-            var queries = SmartSplit(input);
+            var playInput = StripPlayPrefix(input);
+            var queries = SmartSplit(playInput);
             var (songs, errors) = ResolveAll(queries);
             if (errors.Count > 0)
             {
@@ -226,7 +227,7 @@ static class App
                 else
                 {
                     Ui.Dim("  [SYS] mode   :: playback disabled / read-only, look but no beep");
-                    Ui.Dim("  [SYS] allow  :: list  help  cls  stop  0/q");
+                    Ui.Dim("  [SYS] allow  :: list  help  clear  stop  quit");
                     Ui.Dim("  [SYS] action :: fix driver/access and restart (you got this)");
                 }
                 Console.WriteLine();
@@ -242,9 +243,7 @@ static class App
 
     private static bool IsRandomKeyword(string s) =>
         s.Equals("random", StringComparison.OrdinalIgnoreCase) ||
-        s.Equals("rnd", StringComparison.OrdinalIgnoreCase) ||
-        s.Equals("rand", StringComparison.OrdinalIgnoreCase) ||
-        s.Equals("shuffle", StringComparison.OrdinalIgnoreCase);
+        s.Equals("r", StringComparison.OrdinalIgnoreCase);
 
     private static string[] SmartSplit(string input)
     {
@@ -261,9 +260,26 @@ static class App
         return parts.Length > 1 ? parts : [input];
     }
 
+    private static string StripPlayPrefix(string input)
+    {
+        var parts = input.Split([' ', '\t'], 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length > 0 && (parts[0].Equals("--play", StringComparison.OrdinalIgnoreCase) || parts[0].Equals("-p", StringComparison.OrdinalIgnoreCase)))
+            return parts.Length > 1 ? parts[1] : string.Empty;
+        return input;
+    }
+
+    private static string[] StripPlayArgPrefix(string[] args)
+    {
+        if (args.Length > 0 && (args[0].Equals("--play", StringComparison.OrdinalIgnoreCase) || args[0].Equals("-p", StringComparison.OrdinalIgnoreCase)))
+            return args.Skip(1).ToArray();
+        return args;
+    }
+
     private static string[] QueriesFromArgs(string[] args)
     {
-        var effective = (args.Length > 0 && args[0] is "--play" or "-p") ? args.Skip(1).ToArray() : args;
+        var effective = (args.Length > 0 && (args[0].Equals("--play", StringComparison.OrdinalIgnoreCase) || args[0].Equals("-p", StringComparison.OrdinalIgnoreCase)))
+            ? args.Skip(1).ToArray()
+            : args;
         if (effective.Length == 0) return [];
 
         if (effective.Length == 1)
@@ -355,7 +371,51 @@ static class App
         }
     }
 
-    private static bool IsHelp(string a) => a is "-h" or "--help" or "/?" or "help";
-    private static bool IsList(string a) => a is "-l" or "--list" or "list";
-    private static bool IsStop(string a) => a is "-s" or "--stop" or "stop" or "mute";
+    private static bool IsHelpArg(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "-h" or "--help";
+    }
+
+    private static bool IsHelpCmd(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "help" or "h";
+    }
+
+    private static bool IsListArg(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "-l" or "--list";
+    }
+
+    private static bool IsListCmd(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "list" or "l";
+    }
+
+    private static bool IsStopArg(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "-s" or "--stop";
+    }
+
+    private static bool IsStopCmd(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "stop" or "s";
+    }
+
+    private static bool IsExitCmd(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "quit" or "q";
+    }
+
+    private static bool IsClearCmd(string a)
+    {
+        string c = a.ToLowerInvariant();
+        return c is "clear" or "c";
+    }
 }
