@@ -47,22 +47,22 @@ static class App
                     Ui.PrintBanner(compact: true, avail);
                     Console.WriteLine();
                     Ui.Warn("mute requested :: best effort (speaker access unavailable)");
-                    Ui.Dim("  :: " + avail);
+                    Ui.Dim("  " + avail);
                     return 1;
                 }
 
                 var queries = QueriesFromArgs(args);
                 if (queries.Length == 0)
                 {
-                    Ui.Error("no tracks specified :: use --list");
+                    Ui.Error("no tracks specified :: give me something to beep, try --list");
                     return 1;
                 }
 
                 var (songs, errors) = ResolveAll(queries);
                 if (errors.Count > 0)
                 {
-                    Ui.Error("not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")));
-                    Ui.Dim("  :: use --list to show available track ids, keys, and names");
+                    Ui.Error("not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  (nice try)");
+                    Ui.Dim("  use --list to see what actually exists");
                     return 1;
                 }
 
@@ -77,7 +77,7 @@ static class App
                 }
                 else
                 {
-                    if (aborted) Ui.Warn("aborted :: signal cut");
+                    if (aborted) Ui.Warn("aborted :: playback stopped");
                     else Ui.Success("done :: playback complete");
                 }
                 return 0;
@@ -127,7 +127,7 @@ static class App
             {
                 PcSpeaker.Stop();
                 status = availabilityError is null
-                    ? "speaker muted :: port 0x61 cleared"
+                    ? "speaker muted :: port 0x61 cleared, sweet silence"
                     : "mute requested :: best effort (speaker access unavailable)";
                 statusOk = availabilityError is null;
                 continue;
@@ -136,7 +136,7 @@ static class App
             if (availabilityError is not null)
             {
                 availabilityError = PcSpeaker.CheckAvailability() ?? availabilityError;
-                status = "playback disabled: input rejected while speaker access is unavailable";
+                status = "playback disabled: speaker access unavailable, no beep for you yet";
                 statusOk = false;
                 continue;
             }
@@ -145,13 +145,13 @@ static class App
             var (songs, errors) = ResolveAll(queries);
             if (errors.Count > 0)
             {
-                status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  use 'list' for track ids/keys";
+                status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  nice try, use 'help'";
                 statusOk = false;
                 continue;
             }
             if (songs.Count == 0)
             {
-                status = "empty selection";
+                status = "empty selection :: you gotta pick something, buddy";
                 statusOk = false;
                 continue;
             }
@@ -185,20 +185,20 @@ static class App
         PcSpeaker.Stop();
         Ui.ClearScreen();
         Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
-        Ui.Success("session closed :: speaker muted");
+        Ui.Success("session closed :: speaker muted, go touch some grass");
         Console.WriteLine();
         Ui.Reset();
         return 0;
     }
 
-    private static void DrawScreen(View view, string? status, bool statusOk, string? availabilityError)
+    private static void DrawScreen(View view, string? status, bool statusOk, string? availabilityError, bool playing = false)
     {
         Ui.ClearScreen();
 
         switch (view)
         {
             case View.List:
-                Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
+                Ui.PrintBanner(compact: true, availabilityError, showNfo: false, playing: playing);
                 Ui.PrintTable();
                 Console.WriteLine();
                 if (!string.IsNullOrWhiteSpace(status))
@@ -208,7 +208,7 @@ static class App
                 }
                 break;
             case View.Help:
-                Ui.PrintBanner(compact: true, availabilityError, showNfo: false);
+                Ui.PrintBanner(compact: true, availabilityError, showNfo: false, playing: playing);
                 Ui.WriteHelpBody();
                 Console.WriteLine();
                 if (!string.IsNullOrWhiteSpace(status))
@@ -218,19 +218,16 @@ static class App
                 }
                 break;
             default:
-                Ui.PrintBanner(compact: true, availabilityError);
+                Ui.PrintBanner(compact: true, availabilityError, playing: playing);
                 if (availabilityError is null)
                 {
-                    Ui.Dim("  [SYS] cmds   :: list  help  cls  stop");
-                    Ui.Dim("  [SYS] input  :: id / key / name / random");
-                    Ui.Dim("  [SYS] queue  :: delimit with ',' ';' or space");
-                    Ui.Dim("  [SYS] exit   :: 0 / q / quit / exit");
+                    Ui.Dim("  [SYS] type 'help' for commands and usage");
                 }
                 else
                 {
-                    Ui.Dim("  [SYS] mode   :: playback disabled / read-only shell");
+                    Ui.Dim("  [SYS] mode   :: playback disabled / read-only, look but no beep");
                     Ui.Dim("  [SYS] allow  :: list  help  cls  stop  0/q");
-                    Ui.Dim("  [SYS] action :: restore driver/access and restart the app");
+                    Ui.Dim("  [SYS] action :: fix driver/access and restart (you got this)");
                 }
                 Console.WriteLine();
 
@@ -315,11 +312,11 @@ static class App
         }
 
         Ui.Error(warn);
-        Ui.Dim("  :: playback unavailable: input/command blocked until driver and access are ready");
+        Ui.Dim("  playback unavailable: input/command blocked until driver and access are ready");
         if (warn.Contains("inpoutx64.dll", StringComparison.OrdinalIgnoreCase))
-            Ui.Dim("  :: place inpoutx64.dll next to exe + run as Administrator");
+            Ui.Dim("  place inpoutx64.dll next to exe + run as Administrator");
         else
-            Ui.Dim("  :: run as Administrator and check speaker/driver availability");
+            Ui.Dim("  run as Administrator and check speaker/driver availability");
         return false;
     }
 
@@ -334,7 +331,7 @@ static class App
                 if (cts.IsCancellationRequested) break;
 
                 // Keep the originating screen and append playback block.
-                DrawScreen(fromView, status: null, statusOk: true, availabilityError: availabilityError);
+                DrawScreen(fromView, status: null, statusOk: true, availabilityError: availabilityError, playing: true);
                 Ui.NowPlaying(songs[i], i + 1, songs.Count);
                 Console.WriteLine();
 

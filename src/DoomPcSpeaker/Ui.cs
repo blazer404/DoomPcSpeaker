@@ -56,12 +56,9 @@ static class Ui
         catch { }
     }
 
-    public static void PrintBanner(bool compact, string? availabilityError = null, bool showNfo = true)
+    public static void PrintBanner(bool compact, string? availabilityError = null, bool showNfo = true, bool playing = false)
     {
         bool online = availabilityError is null;
-
-        Tape("PC SPEAKER // HARDWARE BEEPER INTERFACE // AUDIO TERMINAL", ConsoleColor.Cyan, ConsoleColor.Magenta);
-        Console.WriteLine();
 
         string[] logo =
         [
@@ -102,47 +99,52 @@ static class Ui
         if (showNfo)
         {
             Console.WriteLine();
-            NfoBox(compact, availabilityError);
+            NfoBox(compact, availabilityError, playing);
         }
         Console.WriteLine();
     }
 
-    private static void NfoBox(bool compact, string? availabilityError = null)
+    private static void NfoBox(bool compact, string? availabilityError = null, bool playing = false)
     {
         bool online = availabilityError is null;
         string title = online ? "DEVICE INFO" : "DEVICE INFO // ACCESS DENIED";
 
         DBoxTop(title, ConsoleColor.Cyan);
-        DBoxRow("app", "PC speaker hardware jukebox", ConsoleColor.White);
-        DBoxRow("type", "Standalone hardware audio player / console interface", ConsoleColor.Magenta);
-        DBoxRow("tracks", $"{Melodies.All.Length:00} chiptune tracks for onboard speaker output", ConsoleColor.Green);
+        DBoxRow("app", "PC speaker hardware jukebox (yes, that beep thing)", ConsoleColor.White);
+        DBoxRow("type", "Standalone hardware audio player / no soundcard, no mercy", ConsoleColor.Magenta);
+        DBoxRow("tracks", $"{Melodies.All.Length:00} chiptune tracks ready to annoy everyone nearby", ConsoleColor.Green);
         DBoxRow("target", "windows x64 · net9.0 · inpoutx64 driver", ConsoleColor.Yellow);
         DBoxSep();
         DBoxRow("engine", "i8254 PIT channel 2 @ 0x43/0x42/0x61, square-wave", ConsoleColor.Cyan);
         DBoxRow("access", "administrator rights required for port I/O", ConsoleColor.Yellow);
-        DBoxRow("modes", "interactive shell, direct CLI, queue, random", ConsoleColor.Gray);
+        DBoxRow("modes", "interactive shell, direct CLI, queue, random chaos", ConsoleColor.Gray);
         if (online)
-            DBoxRow("status", "ONLINE :: ready for input", ConsoleColor.Green);
+        {
+            if (playing)
+                DBoxRow("status", "PLAYING :: playback in progress", ConsoleColor.Green);
+            else
+                DBoxRow("status", "ONLINE :: ready for input, don't be shy", ConsoleColor.Green);
+        }
         else
             DBoxRow("status", "ERROR :: " + availabilityError, ConsoleColor.Red);
 
         if (!compact)
         {
             DBoxSep();
-            DBoxRow("input", "id / key / name fragment / alias", ConsoleColor.White);
-            DBoxRow("queue", "separate tracks with ',' ';' or space", ConsoleColor.White);
-            DBoxRow("cmds", "list | help | cls | stop | 0/q exit", ConsoleColor.DarkGray);
-            DBoxRow("abort", "Ctrl+C stops playback/queue (session remains)", ConsoleColor.Red);
+            DBoxRow("input", "id / key / name fragment / alias (type like you mean it)", ConsoleColor.White);
+            DBoxRow("queue", "separate tracks with ',' ';' or space (go wild)", ConsoleColor.White);
+            DBoxRow("cmds", "list | help | cls | stop | 0/q exit (the usual suspects)", ConsoleColor.DarkGray);
+            DBoxRow("abort", "Ctrl+C stops playback/queue (panic button, session lives)", ConsoleColor.Red);
         }
 
         if (!online)
         {
             DBoxSep();
             if (availabilityError!.Contains("inpoutx64.dll", StringComparison.OrdinalIgnoreCase))
-                DBoxRow("fix", "place inpoutx64.dll next to exe, run as administrator", ConsoleColor.Yellow);
+                DBoxRow("fix", "drop inpoutx64.dll next to exe, run as admin (easy mode)", ConsoleColor.Yellow);
             else
-                DBoxRow("fix", "run as administrator and verify speaker/driver access", ConsoleColor.Yellow);
-            DBoxRow("note", "playback input is disabled until access is restored", ConsoleColor.Red);
+                DBoxRow("fix", "run as admin and check speaker/driver (yes, again)", ConsoleColor.Yellow);
+            DBoxRow("note", "playback locked until you fix it, no beep for you", ConsoleColor.Red);
         }
         DBoxBottom();
     }
@@ -150,9 +152,10 @@ static class Ui
     public static void PrintTable()
     {
         int keyWidth = Math.Max(12, Melodies.All.Max(m => m.Key.Length));
-        int nameWidth = 36;
-        // inner layout: " [00]  " + key + "  ▸ " + name + " " => 7 + keyWidth + 4 + nameWidth + 1
-        int inner = 12 + keyWidth + nameWidth;
+        int inner = PanelInner;
+        // inner layout: " [00]  " + key + "  ▸ " + name + " " => 12 + keyWidth + nameWidth
+        int nameWidth = inner - 12 - keyWidth;
+        if (nameWidth < 10) nameWidth = 10;
 
         DBoxTopCustom("TRACKLIST", inner, ConsoleColor.Cyan);
 
@@ -181,7 +184,7 @@ static class Ui
         }
 
         DBoxSepCustom(inner);
-        string footer = Fit($"  {Melodies.All.Length:00} modules armed  //  target: id | key | name | random", inner).PadRight(inner);
+        string footer = Fit($"  {Melodies.All.Length:00} tracks loaded  //  pick: id | key | name | random", inner).PadRight(inner);
         Write(ConsoleColor.Gray, Prefix + "║");
         Write(ConsoleColor.Green, footer);
         WriteLine(ConsoleColor.Gray, "║");
@@ -209,15 +212,17 @@ static class Ui
 
         RoundedPanel("CONTROLS", ConsoleColor.Magenta, writer =>
         {
-            writer.Kv("target", "id / key / name fragment / alias");
-            writer.Kv("chaos", "random / rnd / rand / shuffle");
-            writer.Kv("queue", "comma, semicolon or space separated");
-            writer.Kv("list", "show tracklist (interactive: list/l/ls)");
-            writer.Kv("help", "show help (interactive: help/h/?)");
-            writer.Kv("cls", "return to main screen / clear status");
-            writer.Kv("stop", "silence speaker (stop/mute)");
-            writer.Kv("abort", "Ctrl+C stops playback/queue");
-            writer.Kv("escape", "0 / q / quit / exit");
+            writer.Section("ACTIONS", ConsoleColor.DarkYellow);
+            writer.Kv("play", "enter track number, key, name fragment, or alias");
+            writer.Kv("queue", "separate tracks with comma, semicolon, or space");
+            writer.Kv("Ctrl+C", "stop playback/queue; if idle, exit the app");
+            writer.Section("COMMANDS", ConsoleColor.DarkCyan);
+            writer.Kv("random", "play a random track (aliases: random/rnd/rand/shuffle)");
+            writer.Kv("list", "show tracklist (aliases: list / l / ls)");
+            writer.Kv("help", "show this help (aliases: help / h / ?)");
+            writer.Kv("clear", "clear screen and return to main view (cls / clear)");
+            writer.Kv("stop", "silence the speaker (stop / mute)");
+            writer.Kv("exit", "quit the app (0 / q / quit / exit)");
         });
         Console.WriteLine();
 
@@ -229,6 +234,7 @@ static class Ui
             writer.Cmd("DoomPcSpeaker.exe doom pirates rickroll");
             writer.Cmd("DoomPcSpeaker.exe \"got, godfather, vampirekiller\"");
             writer.Cmd("DoomPcSpeaker.exe random");
+            writer.Tip("copypaste like a pro");
         });
         Console.WriteLine();
 
@@ -236,7 +242,6 @@ static class Ui
         {
             writer.Alert("driver", "inpoutx64.dll must be next to executable", ConsoleColor.Yellow);
             writer.Alert("access", "Administrator rights required for port I/O", ConsoleColor.Yellow);
-            writer.Tip("no CLI flags needed: run without args and use interactive shell");
         });
     }
 
@@ -297,7 +302,7 @@ static class Ui
         DBoxTop(title, ConsoleColor.Cyan);
         DBoxRow("track", $"{song.Name}  [{song.Key}]", ConsoleColor.White);
         DBoxRow("route", "port 0x61 > i8254 PIT CH2 > square-wave output", ConsoleColor.Cyan);
-        DBoxRow("state", "RUNNING :: playback active", ConsoleColor.Green);
+        DBoxRow("state", "RUNNING :: screaming through the beeper, enjoy", ConsoleColor.Green);
         DBoxSep();
         DBoxRow("ctrl+c", "abort playback/queue (signal cut, session alive)", ConsoleColor.Red);
         DBoxBottom();
@@ -463,6 +468,16 @@ static class Ui
             Write(ConsoleColor.Yellow, "  [tip] ");
             Write(ConsoleColor.Gray, Fit(text, _inner - 8).PadRight(_inner - 8));
             WriteLine(ConsoleColor.Gray, "│");
+        }
+
+        public void Section(string label, ConsoleColor color)
+        {
+            string l = $"◆ {label} ◆";
+            int fill = _inner - 1 - l.Length;
+            if (fill < 0) { l = Fit($"◆ {label}", _inner - 1); fill = 0; }
+            Write(ConsoleColor.Gray, Prefix + "├─");
+            Write(color, l);
+            WriteLine(ConsoleColor.Gray, new string('─', fill) + "┤");
         }
 
         private void Print(string content, ConsoleColor valueColor, ConsoleColor labelColor, int labelStart, int labelLen)
