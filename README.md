@@ -26,6 +26,23 @@ dotnet build .\DoomPcSpeaker.sln -c Release
 dotnet test .\DoomPcSpeaker.sln -c Debug
 ```
 
+## Публикация
+
+Публикация остаётся framework-dependent. Единственное изменение сборки — `PDB` не создаётся для конфигурации Release: файл не нужен для запуска, а его исключение даёт всю фактическую экономию размера.
+
+```powershell
+dotnet publish .\src\DoomPcSpeaker\DoomPcSpeaker.csproj -c Release -o .\publish
+```
+
+Замеры на SDK 9.0.321:
+
+| Вариант | Файлов | Общий размер | EXE |
+|---|---:|---:|---:|
+| До изменений | 24 | 376 544 B | 156 160 B |
+| После изменений | 23 | 352 132 B | 156 160 B |
+
+Trimming и сжатие SingleFile не применяются: .NET 9 требует для них self-contained публикации, что увеличивает дистрибутив примерно до 20 МБ. `InvariantGlobalization` проверен, на размер и вывод влияния не оказал, поэтому не включён.
+
 ## Использование
 
 ```text
