@@ -60,7 +60,7 @@ static class Ui
     {
         bool online = availabilityError is null;
 
-        Tape("SIGNAL NODE // PCSPKR_HARDWARE_INTERFACE // TACTICAL AUDIO TERMINAL", ConsoleColor.Cyan, ConsoleColor.Magenta);
+        Tape("PC SPEAKER // HARDWARE BEEPER INTERFACE // AUDIO TERMINAL", ConsoleColor.Cyan, ConsoleColor.Magenta);
         Console.WriteLine();
 
         string[] logo =
@@ -82,7 +82,7 @@ static class Ui
             ConsoleColor.DarkRed,
         ];
 
-        RoundedTop("NODE:PCSPKR  //  BEEPER CORE  //  SIGNAL INTERFACE", ConsoleColor.Yellow);
+        RoundedTop("PCSPKR  //  BEEPER CORE  //  HARDWARE INTERFACE", ConsoleColor.Yellow);
         RoundedBody(string.Empty, ConsoleColor.DarkGray);
         for (int i = 0; i < logo.Length; i++)
             RoundedBody("  " + logo[i], logoColors[i]);
@@ -97,7 +97,7 @@ static class Ui
         RoundedBottom();
 
         Console.WriteLine();
-        Tape($"signal={ (online ? "stable" : "degraded") }  //  payload={Melodies.All.Length:00} modules  //  ui=tactical_terminal", ConsoleColor.Green, ConsoleColor.Magenta);
+        Tape($"status={ (online ? "ready" : "degraded") }  //  tracks={Melodies.All.Length:00} loaded  //  mode=console", ConsoleColor.Green, ConsoleColor.Magenta);
 
         if (showNfo)
         {
@@ -110,19 +110,19 @@ static class Ui
     private static void NfoBox(bool compact, string? availabilityError = null)
     {
         bool online = availabilityError is null;
-        string title = online ? "TACTICAL PANEL // release.nfo" : "TACTICAL PANEL // access.denied";
+        string title = online ? "DEVICE INFO" : "DEVICE INFO // ACCESS DENIED";
 
         DBoxTop(title, ConsoleColor.Cyan);
-        DBoxRow("release", "PC speaker hardware jukebox  [terminal cut]", ConsoleColor.White);
-        DBoxRow("scene", "standalone signal tool / technical audio interface", ConsoleColor.Magenta);
-        DBoxRow("payload", $"{Melodies.All.Length:00} chiptune modules for onboard speaker output", ConsoleColor.Green);
+        DBoxRow("app", "PC speaker hardware jukebox", ConsoleColor.White);
+        DBoxRow("type", "Standalone hardware audio player / console interface", ConsoleColor.Magenta);
+        DBoxRow("tracks", $"{Melodies.All.Length:00} chiptune tracks for onboard speaker output", ConsoleColor.Green);
         DBoxRow("target", "windows x64 · net9.0 · inpoutx64 driver", ConsoleColor.Yellow);
         DBoxSep();
         DBoxRow("engine", "i8254 PIT channel 2 @ 0x43/0x42/0x61, square-wave", ConsoleColor.Cyan);
         DBoxRow("access", "administrator rights required for port I/O", ConsoleColor.Yellow);
         DBoxRow("modes", "interactive shell, direct CLI, queue, random", ConsoleColor.Gray);
         if (online)
-            DBoxRow("status", "ONLINE :: ready, awaiting operator command", ConsoleColor.Green);
+            DBoxRow("status", "ONLINE :: ready for input", ConsoleColor.Green);
         else
             DBoxRow("status", "ERROR :: " + availabilityError, ConsoleColor.Red);
 
@@ -154,7 +154,7 @@ static class Ui
         // inner layout: " [00]  " + key + "  ▸ " + name + " " => 7 + keyWidth + 4 + nameWidth + 1
         int inner = 12 + keyWidth + nameWidth;
 
-        DBoxTopCustom("TRACKLIST.DB // DATA MODULE", inner, ConsoleColor.Cyan);
+        DBoxTopCustom("TRACKLIST", inner, ConsoleColor.Cyan);
 
         int idx = 1;
         foreach (var group in Melodies.Groups)
@@ -199,11 +199,11 @@ static class Ui
     {
         RoundedPanel("USAGE", ConsoleColor.Cyan, writer =>
         {
-            writer.Row("DoomPcSpeaker.exe", "launch interactive tactical shell");
+            writer.Row("DoomPcSpeaker.exe", "launch interactive shell");
             writer.Row("DoomPcSpeaker.exe <tracks>", "play track(s) directly and exit");
             writer.Row("DoomPcSpeaker.exe --list", "print full track database");
             writer.Row("DoomPcSpeaker.exe --stop", "mute speaker / clear port state");
-            writer.Row("DoomPcSpeaker.exe --help", "show this operator guide");
+            writer.Row("DoomPcSpeaker.exe --help", "show this help");
         });
         Console.WriteLine();
 
@@ -246,7 +246,7 @@ static class Ui
         if (!locked)
         {
             Write(ConsoleColor.Gray, Prefix + "╭─[");
-            Write(ConsoleColor.Cyan, "NODE@PCSPKR");
+            Write(ConsoleColor.Cyan, "PCSPKR");
             Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Green, "INPUT:READY");
             Write(ConsoleColor.Gray, "]─[");
@@ -254,13 +254,13 @@ static class Ui
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");
-            Write(ConsoleColor.Green, "inject");
+            Write(ConsoleColor.Green, "select");
             Write(ConsoleColor.Gray, " > ");
         }
         else
         {
             Write(ConsoleColor.Gray, Prefix + "╭─[");
-            Write(ConsoleColor.Red, "NODE@PCSPKR");
+            Write(ConsoleColor.Red, "PCSPKR");
             Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Red, "INPUT:LOCKED");
             Write(ConsoleColor.Gray, "]─[");
@@ -268,7 +268,7 @@ static class Ui
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");
-            Write(ConsoleColor.Red, "denied");
+            Write(ConsoleColor.Red, "locked");
             Write(ConsoleColor.Gray, " > ");
         }
         Console.ResetColor();
@@ -290,7 +290,7 @@ static class Ui
 
     public static void NowPlaying(Melodies.Song song, int? index = null, int? total = null)
     {
-        string title = "ACTION PANEL // SIGNAL INJECTED";
+        string title = "NOW PLAYING";
         if (index.HasValue && total.HasValue && total.Value > 1)
             title += $"  [{index.Value:00}/{total.Value:00}]";
 
@@ -494,7 +494,7 @@ static class Ui
         RoundedBottom();
     }
 
-    // --- Double-line tactical panels ---
+    // --- Double-line panels ---
     private static void DBoxTop(string title, ConsoleColor titleColor)
     {
         DBoxTopCustom(title, PanelInner, titleColor);
