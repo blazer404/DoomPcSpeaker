@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 static class Ui
 {
     private const string Prefix = "  ";
@@ -292,6 +294,251 @@ static class Ui
         Write(ConsoleColor.Yellow, "input");
         Write(ConsoleColor.Gray, " > ");
         Console.ResetColor();
+    }
+
+    public static string? ReadLineWithSlashSuggestions(bool locked = false, Action? redraw = null)
+    {
+        string[] commands = locked
+            ? ["list", "stop", "clear", "help", "quit"]
+            : ["list", "random", "stop", "clear", "help", "quit"];
+
+        int inputLeft = Console.CursorLeft;
+        int inputTop = Console.CursorTop;
+        var buf = new System.Text.StringBuilder();
+
+        int popupHeight = 0;
+        int popupTop = 0;
+        int popupLeft = 0;
+        int popupWidth = 0;
+        CHAR_INFO[]? savedBuf = null;
+        int savedW = 0;
+        int savedH = 0;
+        int selectedIndex = 0;
+
+        string[] GetMatches()
+        {
+            string text = buf.ToString();
+            if (!text.StartsWith('/')) return [];
+            string q = text[1..];
+            return commands
+                .Where(c => c.StartsWith(q, StringComparison.OrdinalIgnoreCase))
+                .Select(c => "/" + c)
+                .ToArray();
+        }
+
+        void RestorePopup()
+        {
+            if (popupHeight <= 0) return;
+            int oldH = popupHeight;
+            int oldTop = popupTop;
+            int oldLeft = popupLeft;
+            int oldW = popupWidth;
+            if (savedBuf != null)
+            {
+                RestoreBufferRegion(popupLeft, popupTop, savedW, savedH, savedBuf);
+                savedBuf = null;
+                popupHeight = 0;
+                return;
+            }
+
+            savedBuf = null;
+            popupHeight = 0;
+            if (redraw != null)
+            {
+                redraw();
+                inputLeft = Console.CursorLeft;
+                inputTop = Console.CursorTop;
+                string text = buf.ToString();
+                Console.Write(text);
+                int tail = Math.Max(0, Console.WindowWidth - 1 - (inputLeft + text.Length));
+                if (tail > 0) Console.Write(new string(' ', tail));
+                Console.SetCursorPosition(inputLeft + text.Length, inputTop);
+                return;
+            }
+
+            int width = Math.Max(0, Math.Min(oldW, Console.BufferWidth - oldLeft));
+            for (int i = 0; i < oldH; i++)
+            {
+                int row = oldTop + i;
+                if (row < 0 || row >= Console.BufferHeight) continue;
+                Console.SetCursorPosition(oldLeft, row);
+                Console.Write(new string(' ', width));
+            }
+        }
+
+        void SavePopupArea(int left, int top, int width, int height)
+        {
+            savedBuf = SaveBufferRegion(left, top, width, height);
+            savedW = width;
+            savedH = height;
+        }
+
+        void Render(bool redrawInput = true)
+        {
+            string text = buf.ToString();
+            var matches = GetMatches();
+            if (matches.Length == 0) selectedIndex = 0;
+            else if (selectedIndex >= matches.Length) selectedIndex = matches.Length - 1;
+            else if (selectedIndex < 0) selectedIndex = 0;
+
+            Console.CursorVisible = false;
+            if (redrawInput)
+            {
+                Console.SetCursorPosition(inputLeft, inputTop);
+                Console.Write(text);
+                int tail = Math.Max(0, Console.WindowWidth - 1 - (inputLeft + text.Length));
+                if (tail > 0) Console.Write(new string(' ', tail));
+            }
+
+            if (matches.Length == 0)
+            {
+                if (popupHeight > 0) RestorePopup();
+                Console.SetCursorPosition(inputLeft + text.Length, inputTop);
+                Console.ResetColor();
+                Console.CursorVisible = true;
+                return;
+            }
+
+            int inner = matches.Max(m => m.Length) + 4; // "▸ /cmd "
+            inner = Math.Max(inner, " commands ".Length + 1);
+            int left = Math.Min(inputLeft, Math.Max(0, Console.WindowWidth - 4));
+            int maxBoxWidth = Math.Max(14, Console.WindowWidth - left - 1);
+            int boxWidth = Math.Min(inner + 2, maxBoxWidth);
+            inner = boxWidth - 2;
+
+            int spaceAbove = inputTop;
+            int spaceBelow = Math.Max(0, Console.BufferHeight - inputTop - 1);
+            int needed = matches.Length + 2;
+            bool openUp = spaceAbove >= needed || spaceAbove >= spaceBelow;
+            int maxRows = openUp ? spaceAbove : spaceBelow;
+            int drawCount = Math.Min(matches.Length, Math.Max(0, maxRows - 2));
+            if (drawCount <= 0)
+            {
+                if (popupHeight > 0) RestorePopup();
+                Console.SetCursorPosition(inputLeft + text.Length, inputTop);
+                Console.ResetColor();
+                Console.CursorVisible = true;
+                return;
+            }
+
+            int totalHeight = drawCount + 2;
+            int newTop = openUp ? inputTop - totalHeight : inputTop + 1;
+            bool sameGeometry = popupHeight == totalHeight && popupTop == newTop && popupLeft == left && popupWidth == boxWidth;
+            if (popupHeight > 0 && !sameGeometry)
+                RestorePopup();
+
+            if (popupHeight == 0)
+            {
+                popupTop = newTop;
+                popupLeft = left;
+                popupWidth = boxWidth;
+                popupHeight = totalHeight;
+                SavePopupArea(popupLeft, popupTop, popupWidth, popupHeight);
+            }
+
+            int row = popupTop;
+            Console.SetCursorPosition(left, row++);
+            Write(ConsoleColor.Magenta, "╭─");
+            Write(ConsoleColor.Cyan, " commands ");
+            Write(ConsoleColor.Magenta, new string('─', Math.Max(0, inner - " commands ".Length - 1)) + "╮");
+
+            for (int i = 0; i < drawCount; i++)
+            {
+                bool active = i == selectedIndex;
+                Console.SetCursorPosition(left, row++);
+                Write(ConsoleColor.Magenta, "│");
+                if (active)
+                {
+                    Console.BackgroundColor = ConsoleColor.DarkMagenta;
+                    Write(ConsoleColor.White, " ▸ ");
+                    Write(ConsoleColor.Yellow, Fit(matches[i], inner - 3).PadRight(inner - 3));
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Write(ConsoleColor.DarkGray, "   ");
+                    Write(ConsoleColor.Gray, Fit(matches[i], inner - 3).PadRight(inner - 3));
+                }
+                Write(ConsoleColor.Magenta, "│");
+            }
+
+            Console.SetCursorPosition(left, row++);
+            Write(ConsoleColor.Magenta, "╰" + new string('─', inner) + "╯");
+
+            Console.SetCursorPosition(inputLeft + text.Length, inputTop);
+            Console.ResetColor();
+            Console.CursorVisible = true;
+        }
+
+        Render();
+        while (true)
+        {
+            var key = Console.ReadKey(intercept: true);
+
+            if (key.Key == ConsoleKey.Enter)
+            {
+                var matches = GetMatches();
+                if (matches.Length > 0)
+                    buf.Clear().Append(matches[Math.Clamp(selectedIndex, 0, matches.Length - 1)]);
+
+                string text = buf.ToString();
+                if (popupHeight > 0) RestorePopup();
+                Console.SetCursorPosition(inputLeft, inputTop);
+                Console.Write(text);
+                int tail = Math.Max(0, Console.WindowWidth - 1 - (inputLeft + text.Length));
+                if (tail > 0) Console.Write(new string(' ', tail));
+                Console.SetCursorPosition(inputLeft + text.Length, inputTop);
+                Console.WriteLine();
+                Console.ResetColor();
+                return text;
+            }
+
+            if (key.Key == ConsoleKey.UpArrow)
+            {
+                var matches = GetMatches();
+                if (matches.Length > 0) { selectedIndex = (selectedIndex - 1 + matches.Length) % matches.Length; Render(redrawInput: false); }
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.DownArrow)
+            {
+                var matches = GetMatches();
+                if (matches.Length > 0) { selectedIndex = (selectedIndex + 1) % matches.Length; Render(redrawInput: false); }
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.Tab)
+            {
+                var matches = GetMatches();
+                if (matches.Length > 0)
+                {
+                    buf.Clear().Append(matches[Math.Clamp(selectedIndex, 0, matches.Length - 1)]);
+                    selectedIndex = 0;
+                    Render();
+                }
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.Backspace)
+            {
+                if (buf.Length > 0) { buf.Length--; selectedIndex = 0; Render(); }
+                continue;
+            }
+
+            if (key.Key == ConsoleKey.Escape)
+            {
+                if (buf.Length > 0) { buf.Clear(); selectedIndex = 0; Render(); }
+                continue;
+            }
+
+            char ch = key.KeyChar;
+            if (!char.IsControl(ch))
+            {
+                buf.Append(ch);
+                selectedIndex = 0;
+                Render();
+            }
+        }
     }
 
     public static void NowPlaying(Melodies.Song song, int? index = null, int? total = null)
@@ -645,5 +892,100 @@ static class Ui
         if (s.Length <= w) return s;
         if (w <= 3) return s[..w];
         return s[..(w - 3)] + "...";
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern IntPtr CreateFileW(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool ReadConsoleOutputW(IntPtr hConsoleOutput, [Out] CHAR_INFO[] lpBuffer, COORD dwBufferSize, COORD dwBufferCoord, ref SMALL_RECT lpReadRegion);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool WriteConsoleOutputW(IntPtr hConsoleOutput, CHAR_INFO[] lpBuffer, COORD dwBufferSize, COORD dwBufferCoord, ref SMALL_RECT lpWriteRegion);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct COORD
+    {
+        public short X;
+        public short Y;
+        public COORD(short x, short y) { X = x; Y = y; }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SMALL_RECT
+    {
+        public short Left;
+        public short Top;
+        public short Right;
+        public short Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct CHAR_INFO
+    {
+        public char UnicodeChar;
+        public ushort Attributes;
+    }
+
+    private static IntPtr GetConsoleOutputHandle()
+    {
+        IntPtr h = CreateFileW("CONOUT$", 0x80000000 | 0x40000000, 1 | 2, IntPtr.Zero, 3, 0, IntPtr.Zero);
+        return (h == IntPtr.Zero || h == new IntPtr(-1)) ? IntPtr.Zero : h;
+    }
+
+    private static CHAR_INFO[]? SaveBufferRegion(int left, int top, int width, int height)
+    {
+        if (width <= 0 || height <= 0) return null;
+        if (left < 0 || top < 0) return null;
+        if (left + width > Console.BufferWidth || top + height > Console.BufferHeight) return null;
+        IntPtr handle = GetConsoleOutputHandle();
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var buf = new CHAR_INFO[width * height];
+            var size = new COORD((short)width, (short)height);
+            var coord = new COORD(0, 0);
+            var rect = new SMALL_RECT
+            {
+                Left = (short)left,
+                Top = (short)top,
+                Right = (short)(left + width - 1),
+                Bottom = (short)(top + height - 1)
+            };
+            return ReadConsoleOutputW(handle, buf, size, coord, ref rect) ? buf : null;
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
+    }
+
+    private static void RestoreBufferRegion(int left, int top, int width, int height, CHAR_INFO[]? buf)
+    {
+        if (buf is null || width <= 0 || height <= 0) return;
+        if (left < 0 || top < 0) return;
+        if (left + width > Console.BufferWidth || top + height > Console.BufferHeight) return;
+        IntPtr handle = GetConsoleOutputHandle();
+        if (handle == IntPtr.Zero) return;
+        try
+        {
+            var size = new COORD((short)width, (short)height);
+            var coord = new COORD(0, 0);
+            var rect = new SMALL_RECT
+            {
+                Left = (short)left,
+                Top = (short)top,
+                Right = (short)(left + width - 1),
+                Bottom = (short)(top + height - 1)
+            };
+            WriteConsoleOutputW(handle, buf, size, coord, ref rect);
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
     }
 }

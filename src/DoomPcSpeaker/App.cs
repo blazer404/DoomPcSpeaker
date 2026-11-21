@@ -107,11 +107,17 @@ static class App
             DrawScreen(view, status, statusOk, availabilityError);
             status = null;
 
-            Ui.Prompt(locked: availabilityError is not null);
-            string? line = Console.ReadLine();
+            bool locked = availabilityError is not null;
+            Ui.Prompt(locked: locked);
+            string? line = Ui.ReadLineWithSlashSuggestions(
+                locked: locked,
+                redraw: () => { DrawScreen(view, status: null, statusOk: true, availabilityError); Ui.Prompt(locked: locked); });
             if (line is null) break;
 
             string input = line.Trim();
+            if (input.StartsWith('/'))
+                input = input[1..].TrimStart();
+
             if (input.Length == 0)
             {
                 // Common input behavior: empty input just refreshes the current screen.
