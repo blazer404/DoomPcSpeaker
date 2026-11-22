@@ -90,4 +90,39 @@ internal sealed class CommandsTests
         Assert.That(unlocked.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
         Assert.That(locked.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
     }
+
+    [Test]
+    public void TrackSuggestions_finds_single_match_case_insensitively()
+    {
+        var matches = Commands.TrackSuggestions("NOK");
+
+        Assert.That(matches, Has.Length.EqualTo(1));
+        Assert.That(matches[0].Name, Is.EqualTo("nokia"));
+        Assert.That(matches[0].Description, Is.EqualTo("Nokia Tune"));
+    }
+
+    [Test]
+    public void TrackSuggestions_returns_all_prefix_matches()
+    {
+        var matches = Commands.TrackSuggestions("m");
+
+        Assert.That(matches.Select(s => s.Name), Is.EquivalentTo(new[] { "mario", "mk", "mi" }));
+        Assert.That(matches.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
+    }
+
+    [Test]
+    public void TrackSuggestions_returns_empty_for_unknown_prefix()
+    {
+        Assert.That(Commands.TrackSuggestions("zzz"), Is.Empty);
+    }
+
+    [TestCase("nok", 0)]
+    [TestCase("doom nok", 5)]
+    [TestCase("doom, nok", 6)]
+    [TestCase("doom;nok", 5)]
+    [TestCase("", 0)]
+    public void CurrentTokenStart_points_to_last_query(string input, int expected)
+    {
+        Assert.That(Commands.CurrentTokenStart(input), Is.EqualTo(expected));
+    }
 }

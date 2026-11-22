@@ -54,6 +54,22 @@ internal static class Commands
 
     public static Suggestion[] Suggestions(bool locked) => locked ? LockedSuggestions : UnlockedSuggestions;
 
+    public static Suggestion[] TrackSuggestions(string query) =>
+        Melodies.All
+            .Where(song => song.Key.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+            .Select(song => new Suggestion(song.Key, song.Name))
+            .ToArray();
+
+    public static int CurrentTokenStart(string input)
+    {
+        for (int i = input.Length - 1; i >= 0; i--)
+        {
+            if (char.IsWhiteSpace(input[i]) || input[i] is ',' or ';')
+                return i + 1;
+        }
+        return 0;
+    }
+
     public static Command MatchArgument(string arg) => Match(argument: true, arg);
 
     public static Command MatchInteractive(string input) => Match(argument: false, input);
