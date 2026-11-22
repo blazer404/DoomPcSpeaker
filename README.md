@@ -101,3 +101,5 @@ dotnet publish .\src\DoomPcSpeaker\DoomPcSpeaker.csproj -c Release -o .\publish
 ```
 
 Публикация framework-dependent: нужен .NET 9 Runtime. Вместе с exe копируются `inpoutx64.dll` и `melodies\`. Код возврата: `0` — успех, `1` — ошибка.
+
+Версия берётся из `version.txt` в корне репозитория. Измените её перед сборкой или публикацией — номер попадёт в свойства exe и появится в баннере и справке.

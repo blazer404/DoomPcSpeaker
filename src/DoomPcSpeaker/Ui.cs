@@ -81,7 +81,7 @@ static class Ui
         RoundedBottom();
 
         Console.WriteLine();
-        Tape($"status={ (online ? "ready" : "degraded") }  //  tracks={Melodies.All.Length:00} loaded  //  mode=console", ConsoleColor.Green, ConsoleColor.Magenta);
+        Tape($"v{AppVersion.Current}  //  status={ (online ? "ready" : "degraded") }  //  tracks={Melodies.All.Length:00} loaded  //  mode=console", ConsoleColor.Green, ConsoleColor.Magenta);
 
         if (showNfo)
         {
@@ -204,6 +204,7 @@ static class Ui
             writer.Row("DoomPcSpeaker.exe -l, --list", "print full track database");
             writer.Row("DoomPcSpeaker.exe -s, --stop", "mute speaker / clear port state");
             writer.Row("DoomPcSpeaker.exe -h, --help", "show this help");
+            writer.Row("version", AppVersion.Current);
         });
         Console.WriteLine();
 
