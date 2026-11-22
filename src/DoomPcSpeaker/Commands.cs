@@ -9,6 +9,8 @@ internal enum Command
     Play,
 }
 
+internal sealed record Suggestion(string Name, string Description);
+
 internal static class Commands
 {
     private static readonly char[] Delimiters = [',', ';'];
@@ -31,10 +33,26 @@ internal static class Commands
         (["quit", "q"], Command.Quit),
     ];
 
-    private static readonly string[] UnlockedSuggestions = ["list", "random", "stop", "clear", "help", "quit"];
-    private static readonly string[] LockedSuggestions = ["list", "stop", "clear", "help", "quit"];
+    private static readonly Suggestion[] UnlockedSuggestions =
+    [
+        new("list", "show tracklist"),
+        new("random", "play a random track"),
+        new("stop", "silence speaker"),
+        new("clear", "clear screen"),
+        new("help", "show help"),
+        new("quit", "exit app"),
+    ];
 
-    public static string[] Suggestions(bool locked) => locked ? LockedSuggestions : UnlockedSuggestions;
+    private static readonly Suggestion[] LockedSuggestions =
+    [
+        new("list", "show tracklist"),
+        new("stop", "silence speaker"),
+        new("clear", "clear screen"),
+        new("help", "show help"),
+        new("quit", "exit app"),
+    ];
+
+    public static Suggestion[] Suggestions(bool locked) => locked ? LockedSuggestions : UnlockedSuggestions;
 
     public static Command MatchArgument(string arg) => Match(argument: true, arg);
 

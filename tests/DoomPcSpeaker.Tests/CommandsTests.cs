@@ -81,8 +81,13 @@ internal sealed class CommandsTests
     [Test]
     public void Suggestions_match_available_commands_for_each_mode()
     {
-        Assert.That(Commands.Suggestions(locked: false), Does.Contain("random"));
-        Assert.That(Commands.Suggestions(locked: true), Does.Not.Contain("random"));
-        Assert.That(Commands.Suggestions(locked: true), Does.Contain("quit"));
+        var unlocked = Commands.Suggestions(locked: false);
+        var locked = Commands.Suggestions(locked: true);
+
+        Assert.That(unlocked.Select(s => s.Name), Does.Contain("random"));
+        Assert.That(locked.Select(s => s.Name), Does.Not.Contain("random"));
+        Assert.That(locked.Select(s => s.Name), Does.Contain("quit"));
+        Assert.That(unlocked.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
+        Assert.That(locked.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
     }
 }

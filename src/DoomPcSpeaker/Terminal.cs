@@ -43,7 +43,7 @@ static class Terminal
 
     public static string? ReadLineWithSlashSuggestions(bool locked = false, Action? redraw = null)
     {
-        string[] commands = Commands.Suggestions(locked);
+        Suggestion[] commands = Commands.Suggestions(locked);
 
         int inputLeft = Console.CursorLeft;
         int inputTop = Console.CursorTop;
@@ -58,15 +58,25 @@ static class Terminal
         int savedH = 0;
         int selectedIndex = 0;
 
-        string[] GetMatches()
+        Suggestion[] GetMatches()
         {
             string text = buffer.ToString();
             if (!text.StartsWith('/')) return [];
             string query = text[1..];
             return commands
-                .Where(c => c.StartsWith(query, StringComparison.OrdinalIgnoreCase))
-                .Select(c => "/" + c)
+                .Where(c => c.Name.StartsWith(query, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
+        }
+
+        static string Label(Suggestion suggestion) => $"/{suggestion.Name} — {suggestion.Description}";
+
+        static void WriteSuggestion(Suggestion suggestion, int width, ConsoleColor nameColor, ConsoleColor descriptionColor)
+        {
+            string name = "/" + suggestion.Name + " — ";
+            string label = Ui.Fit(Label(suggestion), width).PadRight(width);
+            int split = Math.Min(name.Length, label.Length);
+            Ui.Write(nameColor, label[..split]);
+            if (split < label.Length) Ui.Write(descriptionColor, label[split..]);
         }
 
         void RestorePopup()
@@ -142,7 +152,7 @@ static class Terminal
                 return;
             }
 
-            int inner = matches.Max(m => m.Length) + 4; // "▸ /cmd "
+            int inner = matches.Max(m => Label(m).Length) + 4; // "▸ /cmd :: description "
             inner = Math.Max(inner, " commands ".Length + 1);
             int left = Math.Min(inputLeft, Math.Max(0, Console.WindowWidth - 4));
             int maxBoxWidth = Math.Max(14, Console.WindowWidth - left - 1);
@@ -194,13 +204,13 @@ static class Terminal
                 {
                     Console.BackgroundColor = ConsoleColor.DarkMagenta;
                     Ui.Write(ConsoleColor.White, " ▸ ");
-                    Ui.Write(ConsoleColor.Yellow, Ui.Fit(matches[i], inner - 3).PadRight(inner - 3));
+                    WriteSuggestion(matches[i], inner - 3, ConsoleColor.Yellow, ConsoleColor.Gray);
                     Console.ResetColor();
                 }
                 else
                 {
                     Ui.Write(ConsoleColor.DarkGray, "   ");
-                    Ui.Write(ConsoleColor.Gray, Ui.Fit(matches[i], inner - 3).PadRight(inner - 3));
+                    WriteSuggestion(matches[i], inner - 3, ConsoleColor.Gray, ConsoleColor.DarkGray);
                 }
                 Ui.Write(ConsoleColor.Magenta, "│");
             }
@@ -222,7 +232,7 @@ static class Terminal
             {
                 var matches = GetMatches();
                 if (matches.Length > 0)
-                    buffer.Clear().Append(matches[Math.Clamp(selectedIndex, 0, matches.Length - 1)]);
+                    buffer.Clear().Append('/' + matches[Math.Clamp(selectedIndex, 0, matches.Length - 1)].Name);
 
                 string text = buffer.ToString();
                 if (popupHeight > 0) RestorePopup();
@@ -255,7 +265,7 @@ static class Terminal
                 var matches = GetMatches();
                 if (matches.Length > 0)
                 {
-                    buffer.Clear().Append(matches[Math.Clamp(selectedIndex, 0, matches.Length - 1)]);
+                    buffer.Clear().Append('/' + matches[Math.Clamp(selectedIndex, 0, matches.Length - 1)].Name);
                     selectedIndex = 0;
                     Render();
                 }
