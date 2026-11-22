@@ -191,6 +191,9 @@ static class Melodies
                     return false;
                 }
 
+                if (!IsValidNote(frequency, ms, index, out error))
+                    return false;
+
                 list.Add((frequency, ms));
             }
             else if (item.ValueKind == JsonValueKind.Object)
@@ -201,6 +204,10 @@ static class Melodies
                     error = $"note #{index}: expected object with freq/ms";
                     return false;
                 }
+
+                if (!IsValidNote(frequency, ms, index, out error))
+                    return false;
+
                 list.Add((frequency, ms));
             }
             else
@@ -217,6 +224,22 @@ static class Melodies
         }
 
         notes = list.ToArray();
+        return true;
+    }
+
+    private static bool IsValidNote(int frequency, int ms, int index, out string? error)
+    {
+        if (frequency < 0)
+        {
+            error = $"note #{index}: freq must be 0 for a pause or positive for a note";
+            return false;
+        }
+        if (ms <= 0)
+        {
+            error = $"note #{index}: ms must be positive";
+            return false;
+        }
+        error = null;
         return true;
     }
 

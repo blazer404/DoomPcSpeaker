@@ -21,6 +21,19 @@ internal sealed class MelodiesTests
     }
 
     [Test]
+    public void ParseJson_accepts_note_boundaries()
+    {
+        const string json = """
+            {"key":"k","name":"n","notes":[[1,1],[0,1]]}
+            """;
+
+        var (song, error) = Melodies.ParseJson(json, "test.dpsm");
+
+        Assert.That(error, Is.Null);
+        Assert.That(song!.Notes, Is.EqualTo(new[] { (1, 1), (0, 1) }));
+    }
+
+    [Test]
     public void ParseJson_reads_property_aliases()
     {
         const string json = """
@@ -44,6 +57,11 @@ internal sealed class MelodiesTests
     [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[[440]]}", "expected [freq, ms]")]
     [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[[\"x\",1]]}", "freq and ms must be integers")]
     [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[{}]}", "expected object with freq/ms")]
+    [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[[440,0]]}", "ms must be positive")]
+    [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[[440,-1]]}", "ms must be positive")]
+    [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[[0,-1]]}", "ms must be positive")]
+    [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[[-1,100]]}", "freq must be 0 for a pause or positive for a note")]
+    [TestCase("{\"key\":\"k\",\"name\":\"n\",\"notes\":[{\"f\":440,\"d\":0}]}", "ms must be positive")]
     public void ParseJson_rejects_invalid_melodies(string json, string expectedError)
     {
         var (song, error) = Melodies.ParseJson(json, "test.dpsm");
