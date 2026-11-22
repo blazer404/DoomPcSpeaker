@@ -186,6 +186,25 @@ static class Ui
         Write(Melodies.All.Length == 0 ? ConsoleColor.DarkGray : ConsoleColor.Green, footer);
         WriteLine(s.BorderColor, s.V);
         DBoxBottomCustom(inner, s);
+
+        PrintBrokenTracks();
+    }
+
+    private static void PrintBrokenTracks()
+    {
+        if (Melodies.BrokenTracks.Length == 0) return;
+
+        var s = DoubleFrame;
+        Console.WriteLine();
+        DBoxTopCustom("BROKEN TRACKS", PanelInner, ConsoleColor.Red, s);
+        foreach (string issue in Melodies.BrokenTracks)
+        {
+            Write(s.BorderColor, Prefix + s.V);
+            Write(ConsoleColor.Red, "  !  ");
+            Write(ConsoleColor.Gray, Fit(issue, PanelInner - 5).PadRight(PanelInner - 5));
+            WriteLine(s.BorderColor, s.V);
+        }
+        DBoxBottomCustom(PanelInner, s);
     }
 
     public static void PrintHelp(string? availabilityError = null)

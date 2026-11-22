@@ -16,14 +16,16 @@ static class Melodies
     public static readonly Group[] Groups;
     public static readonly Song[] All;
     public static readonly string? LoadError;
+    public static readonly string[] BrokenTracks;
 
     static Melodies()
     {
-        var (catalog, error) = Load();
+        var (catalog, error, broken) = Load();
         Catalog = catalog;
         Groups = catalog.Groups;
         All = catalog.All;
         LoadError = error;
+        BrokenTracks = broken;
     }
 
     public static Song? Resolve(string query) => Catalog.Resolve(query);
@@ -66,12 +68,17 @@ static class Melodies
         }
     }
 
-    private static (MelodyCatalog Catalog, string? Error) Load()
+    private static (MelodyCatalog Catalog, string? Error, string[] Broken) Load()
     {
         string? directory = FindMelodyDir();
         if (directory is null)
-            return (new MelodyCatalog([]), null);
+            return (new MelodyCatalog([]), null, []);
 
+        return LoadDirectory(directory);
+    }
+
+    internal static (MelodyCatalog Catalog, string? Error, string[] Broken) LoadDirectory(string directory)
+    {
         string[] files;
         try
         {
@@ -81,18 +88,21 @@ static class Melodies
         }
         catch (Exception ex)
         {
-            return (new MelodyCatalog([]), $"failed to read melody directory '{directory}': {ex.Message}");
+            return (new MelodyCatalog([]), $"failed to read melody directory '{directory}': {ex.Message}", []);
         }
 
         var songs = new List<Song>();
+        var broken = new List<string>();
         foreach (string file in files)
         {
-            var (song, _) = ParseFile(file);
+            var (song, error) = ParseFile(file);
             if (song is not null)
                 songs.Add(song);
+            else if (error is not null)
+                broken.Add(error);
         }
 
-        return (new MelodyCatalog(songs), null);
+        return (new MelodyCatalog(songs), null, broken.ToArray());
     }
 
     private static string? FindMelodyDir()

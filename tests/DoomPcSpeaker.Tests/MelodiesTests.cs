@@ -103,4 +103,27 @@ internal sealed class MelodiesTests
         Assert.That(catalog.Groups.Length, Is.EqualTo(2));
         Assert.That(catalog.Groups.Single(g => g.Name == "Games").Tracks.Length, Is.EqualTo(2));
     }
+
+    [Test]
+    public void LoadDirectory_collects_parse_errors_without_losing_valid_tracks()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "doompcspeaker-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "good.dpsm"), MinimalMelody);
+            File.WriteAllText(Path.Combine(directory, "bad.dpsm"), "{");
+
+            var (catalog, error, broken) = Melodies.LoadDirectory(directory);
+
+            Assert.That(error, Is.Null);
+            Assert.That(catalog.All.Select(s => s.Key), Is.EqualTo(new[] { "doom" }));
+            Assert.That(broken, Has.Length.EqualTo(1));
+            Assert.That(broken[0], Does.Contain("bad.dpsm").And.Contain("invalid JSON"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
 }
