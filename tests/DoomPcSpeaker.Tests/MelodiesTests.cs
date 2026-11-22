@@ -122,6 +122,77 @@ internal sealed class MelodiesTests
         Assert.That(catalog.Groups.Single(g => g.Name == "Games").Tracks.Length, Is.EqualTo(2));
     }
 
+    private static readonly string[] NewTrackKeys =
+    [
+        "boomer", "pain", "brigada", "seryoga", "dozor", "zveri",
+    ];
+
+    [Test]
+    public void NewTracks_all_parse_with_expected_metadata_and_valid_notes()
+    {
+        string directory = Path.Combine(AppContext.BaseDirectory, "melodies");
+        var (catalog, error, broken) = Melodies.LoadDirectory(directory);
+
+        Assert.That(error, Is.Null);
+        Assert.That(broken, Is.Empty);
+
+        foreach (string key in NewTrackKeys)
+        {
+            var song = catalog.All.SingleOrDefault(s => s.Key == key);
+            Assert.That(song, Is.Not.Null, $"track '{key}' is missing");
+            Assert.That(song!.Name, Is.Not.Empty);
+            Assert.That(song.Group, Is.Not.Empty);
+            Assert.That(song.Notes, Is.Not.Empty);
+            Assert.That(song.Notes.All(n => n.freq >= 0 && n.ms > 0), Is.True,
+                $"track '{key}' has invalid notes");
+        }
+
+        Assert.That(catalog.All.Select(s => s.Key).Distinct().Count(),
+            Is.EqualTo(catalog.All.Length), "track keys must be unique");
+    }
+
+    private static readonly string[] RebuiltTrackKeys =
+    [
+        "igor", "zveri", "got",
+    ];
+
+    // Tempo grids of the corrected tracks: ~155, ~136 and 75 BPM.
+    private static readonly int[] RebuiltTrackGrids = [193, 110, 200];
+
+    [Test]
+    public void RebuiltTracks_keep_source_tempo_grid_without_rests_or_flickers()
+    {
+        string directory = Path.Combine(AppContext.BaseDirectory, "melodies");
+        var (catalog, _, broken) = Melodies.LoadDirectory(directory);
+
+        Assert.That(broken, Is.Empty);
+
+        for (int i = 0; i < RebuiltTrackKeys.Length; i++)
+        {
+            string key = RebuiltTrackKeys[i];
+            int grid = RebuiltTrackGrids[i];
+            var song = catalog.All.SingleOrDefault(s => s.Key == key);
+            Assert.That(song, Is.Not.Null, $"track '{key}' is missing");
+
+            // PcSpeaker.Play already inserts a 3 ms articulation gap and mutes
+            // after every note, so [0, ms] entries are extra holes.
+            Assert.That(song!.Notes.Any(n => n.freq == 0), Is.False,
+                $"track '{key}' contains a rest entry");
+
+            // Off-grid durations shift the perceived BPM of everything after.
+            Assert.That(song.Notes.Where(n => n.ms < grid).All(n => n.ms >= grid * 9 / 10),
+                Is.True, $"track '{key}' has durations off the tempo grid");
+            Assert.That(song.Notes.All(n => n.ms >= grid * 9 / 10), Is.True,
+                $"track '{key}' contains a flickering note");
+
+            Assert.That(song.Notes.Sum(n => n.ms), Is.LessThanOrEqualTo(30000),
+                $"track '{key}' is longer than 30 seconds");
+
+            Assert.That(song.Notes[^1].ms, Is.GreaterThanOrEqualTo(700),
+                $"track '{key}' ends in the middle of a phrase");
+        }
+    }
+
     [Test]
     public void LoadDirectory_collects_parse_errors_without_losing_valid_tracks()
     {

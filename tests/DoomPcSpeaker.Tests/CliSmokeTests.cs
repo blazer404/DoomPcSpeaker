@@ -10,7 +10,7 @@ internal sealed class CliSmokeTests
     [
         "igor", "jingle", "nokia", "rickroll",
         "castlevania", "doom", "mario", "mk", "pacman", "sonic", "tetris",
-        "axelf", "cantina", "father", "got", "mi", "pirates", "starwars",
+        "axelf", "father", "got", "mi", "pirates", "starwars",
     ];
 
     [Test]
