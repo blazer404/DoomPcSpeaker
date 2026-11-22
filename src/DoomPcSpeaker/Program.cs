@@ -10,9 +10,16 @@ return App.Run(args);
 
 internal static class Shutdown
 {
+    private static int _cleanupCount;
+
     public static void Cleanup()
     {
+        if (Interlocked.CompareExchange(ref _cleanupCount, 1, 0) != 0)
+            return;
+
         PcSpeaker.Stop();
         Terminal.Reset();
     }
+
+    internal static int CleanupCount => Volatile.Read(ref _cleanupCount);
 }
