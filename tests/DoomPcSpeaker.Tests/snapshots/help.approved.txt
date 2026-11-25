@@ -1,0 +1,68 @@
+  ╭─░▒ PCSPKR  //  BEEPER CORE  //  HARDWARE INTERFACE ▒░──────────────────╮
+  │                                                                        │
+  │  ▓▓▓▓▓▓╗ ░▓▓▓▓▓▓╗▓▓▓▓▓▓▓╗▓▓▓▓▓▓╗░▓▓╗ ░▓▓╗▓▓▓▓▓▓╗░                      │
+  │  ▓▓╔══▓▓╗▓▓╔════╝▓▓╔════╝▓▓╔══▓▓╗▓▓║░▓▓╔╝▓▓╔══▓▓╗                      │
+  │  ▓▓▓▓▓▓╔╝▓▓║░░░░░▓▓▓▓▓▓▓╗▓▓▓▓▓▓╔╝▓▓▓▓▓╔╝░▓▓▓▓▓▓╔╝                      │
+  │  ▓▓╔═══╝░▓▓║░░░░░╚════▓▓║▓▓╔═══╝░▓▓╔═▓▓╗░▓▓╔══▓▓╗                      │
+  │  ▓▓║░░░░░╚▓▓▓▓▓▓╗▓▓▓▓▓▓▓║▓▓║░░░░░▓▓║ ░▓▓╗▓▓║░░▓▓║                      │
+  │  ╚═╝░░░░░░╚═════╝╚══════╝╚═╝░░░░░╚═╝  ╚═╝╚═╝░░╚═╝                      │
+  │                                                                        │
+  ├─◆ HUD ◆────────────────────────────────────────────────────────────────┤
+  │ SYS  ▸ ARMED                      │  LINK ▸ ONLINE                     │
+  │ DRV  ▸ INPOUTX64/READY            │  CHAN ▸ I8254 PIT CH2              │
+  │ MODE ▸ INTERACTIVE/CLI            │  PORT ▸ 0x43/0x42/0x61             │
+  ╰────────────────────────────────────────────────────────────────────────╯
+
+  ░▒▓[ v1.0.0.0  //  status=ready  //  tracks=24 loaded  //  mode=co... ]▓▒░
+
+  ╔═◢ DEVICE INFO ◣════════════════════════════════════════════════════════╗
+  ║ app       ▸ PC speaker hardware jukebox (yes, that beep thing)         ║
+  ║ type      ▸ Standalone hardware audio player / no soundcard, no mercy  ║
+  ║ tracks    ▸ 24 chiptune tracks ready to annoy everyone nearby          ║
+  ║ target    ▸ windows x64 · net9.0 · inpoutx64 driver                    ║
+  ╠════════════════════════════════════◆═══════════════════════════════════╣
+  ║ engine    ▸ i8254 PIT channel 2 @ 0x43/0x42/0x61, square-wave          ║
+  ║ access    ▸ administrator rights required for port I/O                 ║
+  ║ modes     ▸ interactive shell, direct CLI, queue, random chaos         ║
+  ║ status    ▸ ONLINE :: ready for input, don't be shy                    ║
+  ╚════════════════════════════════════◆═══════════════════════════════════╝
+
+  ┏━◈ USAGE ◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃  DoomPcSpeaker.exe              :: launch interactive shell            ┃
+  ┃  DoomPcSpeaker.exe <tracks>     :: play track(s) directly and exit     ┃
+  ┃  DoomPcSpeaker.exe -l, --list   :: print full track database           ┃
+  ┃  DoomPcSpeaker.exe -s, --stop   :: mute speaker / clear port state     ┃
+  ┃  DoomPcSpeaker.exe -h, --help   :: show this help                      ┃
+  ┃  version                        :: 1.0.0.0                             ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  ╔═◢ CONTROLS ◣═══════════════════════════════════════════════════════════╗
+  ╠═◆ ACTIONS ◆════════════════════════════════════════════════════════════╣
+  ║  play         :: enter track key (from tracklist)                      ║
+  ║  queue        :: separate tracks with comma, semicolon, or space       ║
+  ║  Ctrl+C       :: stop playback/queue; if idle, exit the app            ║
+  ╠═◆ COMMANDS ◆═══════════════════════════════════════════════════════════╣
+  ║  random       :: play a random track (aliases: random, r)              ║
+  ║  list         :: show tracklist (aliases: list, l)                     ║
+  ║  help         :: show this help (aliases: help, h)                     ║
+  ║  clear        :: clear screen (aliases: clear, c)                      ║
+  ║  stop         :: silence speaker (aliases: stop, s)                    ║
+  ║  quit         :: quit the app (aliases: quit, q)                       ║
+  ╚════════════════════════════════════════════════════════════════════════╝
+
+  ┌─▸ EXAMPLES ◂───────────────────────────────────────────────────────────┐
+  │  pcspkr:~$ DoomPcSpeaker.exe                                           │
+  │  pcspkr:~$ DoomPcSpeaker.exe doom                                      │
+  │  pcspkr:~$ DoomPcSpeaker.exe tetris,mario,sonic                        │
+  │  pcspkr:~$ DoomPcSpeaker.exe doom pirates rickroll                     │
+  │  pcspkr:~$ DoomPcSpeaker.exe "got, father, castlevania"                │
+  │  pcspkr:~$ DoomPcSpeaker.exe random                                    │
+  │  [tip] copypaste like a pro                                            │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ╒═◆ REQUIREMENTS ◆═══════════════════════════════════════════════════════╕
+  │  [!] driver : inpoutx64.dll must be next to executable                 │
+  │  [!] access : Administrator rights required for port I/O               │
+  ╘════════════════════════════════════════════════════════════════════════╛
+
+[0m

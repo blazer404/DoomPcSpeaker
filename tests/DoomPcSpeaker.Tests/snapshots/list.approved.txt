@@ -1,0 +1,61 @@
+  ╭─░▒ PCSPKR  //  BEEPER CORE  //  HARDWARE INTERFACE ▒░──────────────────╮
+  │                                                                        │
+  │  ▓▓▓▓▓▓╗ ░▓▓▓▓▓▓╗▓▓▓▓▓▓▓╗▓▓▓▓▓▓╗░▓▓╗ ░▓▓╗▓▓▓▓▓▓╗░                      │
+  │  ▓▓╔══▓▓╗▓▓╔════╝▓▓╔════╝▓▓╔══▓▓╗▓▓║░▓▓╔╝▓▓╔══▓▓╗                      │
+  │  ▓▓▓▓▓▓╔╝▓▓║░░░░░▓▓▓▓▓▓▓╗▓▓▓▓▓▓╔╝▓▓▓▓▓╔╝░▓▓▓▓▓▓╔╝                      │
+  │  ▓▓╔═══╝░▓▓║░░░░░╚════▓▓║▓▓╔═══╝░▓▓╔═▓▓╗░▓▓╔══▓▓╗                      │
+  │  ▓▓║░░░░░╚▓▓▓▓▓▓╗▓▓▓▓▓▓▓║▓▓║░░░░░▓▓║ ░▓▓╗▓▓║░░▓▓║                      │
+  │  ╚═╝░░░░░░╚═════╝╚══════╝╚═╝░░░░░╚═╝  ╚═╝╚═╝░░╚═╝                      │
+  │                                                                        │
+  ├─◆ HUD ◆────────────────────────────────────────────────────────────────┤
+  │ SYS  ▸ ARMED                      │  LINK ▸ ONLINE                     │
+  │ DRV  ▸ INPOUTX64/READY            │  CHAN ▸ I8254 PIT CH2              │
+  │ MODE ▸ INTERACTIVE/CLI            │  PORT ▸ 0x43/0x42/0x61             │
+  ╰────────────────────────────────────────────────────────────────────────╯
+
+  ░▒▓[ v1.0.0.0  //  status=ready  //  tracks=24 loaded  //  mode=co... ]▓▒░
+
+  ╔═◢ DEVICE INFO ◣════════════════════════════════════════════════════════╗
+  ║ app       ▸ PC speaker hardware jukebox (yes, that beep thing)         ║
+  ║ type      ▸ Standalone hardware audio player / no soundcard, no mercy  ║
+  ║ tracks    ▸ 24 chiptune tracks ready to annoy everyone nearby          ║
+  ║ target    ▸ windows x64 · net9.0 · inpoutx64 driver                    ║
+  ╠════════════════════════════════════◆═══════════════════════════════════╣
+  ║ engine    ▸ i8254 PIT channel 2 @ 0x43/0x42/0x61, square-wave          ║
+  ║ access    ▸ administrator rights required for port I/O                 ║
+  ║ modes     ▸ interactive shell, direct CLI, queue, random chaos         ║
+  ║ status    ▸ ONLINE :: ready for input, don't be shy                    ║
+  ╚════════════════════════════════════◆═══════════════════════════════════╝
+
+  ┏━◈ TRACKLIST ◈━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┣ ▓▒░ FUN & CLASSICS ░▒▓ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃  boomer        ▸ Boomer — Мобильник                                    ┃
+  ┃  igor          ▸ Borodin — Prince Igor (Polovtsian)                    ┃
+  ┃  jingle        ▸ Jingle Bells                                          ┃
+  ┃  nokia         ▸ Nokia Tune                                            ┃
+  ┃  pain          ▸ Pain — Shut Your Mouth                                ┃
+  ┃  rickroll      ▸ Rick Astley — Never Gonna Give You Up                 ┃
+  ┃  seryoga       ▸ Серёга — Чёрный бумер                                 ┃
+  ┃  zveri         ▸ Звери — Районы-кварталы                               ┃
+  ┣ ▓▒░ GAMES ░▒▓ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃  castlevania   ▸ Castlevania — Vampire Killer                          ┃
+  ┃  doom          ▸ DOOM — E1M1 (At Doom's Gate)                          ┃
+  ┃  mario         ▸ Super Mario Bros — Theme                              ┃
+  ┃  mk            ▸ Mortal Kombat — Theme                                 ┃
+  ┃  pacman        ▸ Pac-Man — Intro                                       ┃
+  ┃  sonic         ▸ Sonic — Green Hill Zone                               ┃
+  ┃  tetris        ▸ Tetris — Korobeiniki                                  ┃
+  ┣ ▓▒░ MOVIES ░▒▓ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃  axelf         ▸ Axel F (Beverly Hills Cop)                            ┃
+  ┃  brigada       ▸ Бригада — Theme                                       ┃
+  ┃  dozor         ▸ Uma2rman — Ночной дозор                               ┃
+  ┃  father        ▸ The Godfather — Theme                                 ┃
+  ┃  got           ▸ Game of Thrones — Theme                               ┃
+  ┃  mi            ▸ Mission Impossible — Theme                            ┃
+  ┃  pirates       ▸ Pirates of the Caribbean — He's a Pirate              ┃
+  ┃  starwars      ▸ Star Wars — Imperial March                            ┃
+  ┃  tokyodrift    ▸ Tokyo Drift — Teriyaki Boyz                           ┃
+  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+  ┃  24 tracks loaded  //  pick: key | random                              ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+[0m

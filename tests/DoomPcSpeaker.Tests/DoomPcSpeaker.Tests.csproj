@@ -18,4 +18,10 @@
     <ProjectReference Include="..\..\src\DoomPcSpeaker\DoomPcSpeaker.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="snapshots\*.approved.txt" Link="snapshots\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

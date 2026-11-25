@@ -43,6 +43,30 @@ internal sealed class CliSmokeTests
             Assert.That(Regex.IsMatch(output, @"┃\s+" + Regex.Escape(key) + @"\s+▸"), Is.True, $"missing track '{key}'");
     }
 
+    [TestCase("--help", "help")]
+    [TestCase("--list", "list")]
+    public void Cli_output_matches_approved_snapshot(string argument, string snapshot)
+    {
+        var (exitCode, output, error) = Run(argument);
+
+        Assert.That(exitCode, Is.Zero);
+        Assert.That(error, Is.Empty);
+
+        string actual = NormalizeNewlines(output);
+        string expected = NormalizeNewlines(File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "snapshots", snapshot + ".approved.txt")));
+
+        Assert.That(actual, Is.EqualTo(expected),
+            $"output of '{argument}' changed — review the diff before re-approving {snapshot}.approved.txt");
+
+        // Pre-change baseline: the rendered text has no ANSI, only the reset
+        // appended at shutdown. Task 3 removes that too; re-approve afterwards.
+        const string ShutdownReset = "\x1b[0m";
+        Assert.That(actual.EndsWith(ShutdownReset, StringComparison.Ordinal), Is.True);
+        Assert.That(actual[..^ShutdownReset.Length].Contains('\x1b'), Is.False,
+            "rendered CLI text must not contain ANSI escape codes");
+    }
+
     [Test]
     public void Unknown_track_returns_one_and_explains_error()
     {
@@ -66,6 +90,8 @@ internal sealed class CliSmokeTests
         Assert.That(output, Does.Contain("try --list"));
         Assert.That(output, Does.Contain("\x1b[0m"));
     }
+
+    private static string NormalizeNewlines(string text) => text.Replace("\r\n", "\n");
 
     private static (int ExitCode, string Output, string Error) Run(params string[] args)
     {
