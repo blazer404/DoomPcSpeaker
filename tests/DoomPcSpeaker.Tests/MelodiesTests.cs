@@ -151,6 +151,36 @@ internal sealed class MelodiesTests
             Is.EqualTo(catalog.All.Length), "track keys must be unique");
     }
 
+    [Test]
+    public void TokyoDrift_uses_faster_tempo_without_extra_notes()
+    {
+        string directory = Path.Combine(AppContext.BaseDirectory, "melodies");
+        var (catalog, _, broken) = Melodies.LoadDirectory(directory);
+        var song = catalog.All.SingleOrDefault(s => s.Key == "tokyodrift");
+
+        Assert.That(broken, Is.Empty);
+        Assert.That(song, Is.Not.Null, "track 'tokyodrift' is missing");
+        Assert.That(song!.Name, Is.EqualTo("Tokyo Drift — Teriyaki Boyz"));
+        Assert.That(song.Group, Is.EqualTo("Movies"));
+
+        var melody = song.Notes.Where(n => n.freq > 0).ToArray();
+        var pauses = song.Notes.Where(n => n.freq == 0).ToArray();
+
+        // Only the 39 notes of the source MIDI line at 136 BPM: no bells, no
+        // bass and no added notes. Long gaps are shorter to keep it dense.
+        Assert.That(melody, Has.Length.EqualTo(39));
+        Assert.That(melody.All(n => n.ms is 220 or 221), Is.True);
+        Assert.That(melody.Select(n => n.freq).Distinct(),
+            Is.EquivalentTo(new[] { 247, 262, 330, 370, 392, 440 }));
+        Assert.That(melody.Take(14).Select(n => n.freq), Is.EqualTo(new[]
+        {
+            247, 247, 247, 247, 247, 262, 330, 247, 247, 247, 262, 330, 247, 247,
+        }));
+        Assert.That(pauses, Has.Length.EqualTo(31));
+        Assert.That(pauses.All(p => p.ms is 110 or 111 or 140 or 141), Is.True);
+        Assert.That(song.Notes.Sum(n => n.ms), Is.EqualTo(12524));
+    }
+
     private static readonly string[] RebuiltTrackKeys =
     [
         "igor", "zveri", "got",
