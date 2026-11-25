@@ -4,6 +4,8 @@ static class Terminal
 {
     public static void Reset()
     {
+        if (Console.IsOutputRedirected) return;
+
         TryExecute(() =>
         {
             Console.ResetColor();
@@ -13,6 +15,8 @@ static class Terminal
 
     public static void ClearScreen()
     {
+        if (Console.IsOutputRedirected) return;
+
         TryExecute(() =>
         {
             Console.ResetColor();
@@ -43,6 +47,11 @@ static class Terminal
 
     public static string? ReadLineWithSlashSuggestions(bool locked = false, Action? redraw = null)
     {
+        // Redirected streams have no console buffer: skip the popup and read a
+        // plain line, so EOF ends the interactive session instead of throwing.
+        if (Console.IsInputRedirected || Console.IsOutputRedirected)
+            return Console.ReadLine();
+
         Suggestion[] commands = Commands.Suggestions(locked);
 
         int inputLeft = Console.CursorLeft;

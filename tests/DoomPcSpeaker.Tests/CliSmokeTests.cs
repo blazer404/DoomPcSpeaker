@@ -27,7 +27,7 @@ internal sealed class CliSmokeTests
         Assert.That(output, Does.Contain("EXAMPLES"));
         Assert.That(output, Does.Contain("REQUIREMENTS"));
         Assert.That(output, Does.Contain(AppVersion.Current));
-        Assert.That(output, Does.Contain("\x1b[0m"));
+        Assert.That(Regex.IsMatch(output, "\x1b"), Is.False);
     }
 
     [Test]
@@ -59,12 +59,40 @@ internal sealed class CliSmokeTests
         Assert.That(actual, Is.EqualTo(expected),
             $"output of '{argument}' changed — review the diff before re-approving {snapshot}.approved.txt");
 
-        // Pre-change baseline: the rendered text has no ANSI, only the reset
-        // appended at shutdown. Task 3 removes that too; re-approve afterwards.
-        const string ShutdownReset = "\x1b[0m";
-        Assert.That(actual.EndsWith(ShutdownReset, StringComparison.Ordinal), Is.True);
-        Assert.That(actual[..^ShutdownReset.Length].Contains('\x1b'), Is.False,
-            "rendered CLI text must not contain ANSI escape codes");
+        Assert.That(Regex.IsMatch(actual, "\x1b"), Is.False,
+            "redirected CLI output must not contain ANSI escape codes");
+    }
+
+    [Test]
+    public void Interactive_exits_cleanly_on_eof_with_redirected_input()
+    {
+        var startInfo = new ProcessStartInfo(FindExecutable())
+        {
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+        };
+
+        using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("cannot start CLI");
+        process.StandardInput.Close();
+        Task<string> outputTask = process.StandardOutput.ReadToEndAsync();
+        Task<string> errorTask = process.StandardError.ReadToEndAsync();
+
+        bool exited = process.WaitForExit(10_000);
+        if (!exited) process.Kill();
+        Assert.That(exited, Is.True, "interactive CLI hung on EOF");
+
+        string output = outputTask.GetAwaiter().GetResult();
+        string error = errorTask.GetAwaiter().GetResult();
+
+        Assert.That(process.ExitCode, Is.Zero);
+        Assert.That(error, Is.Empty);
+        Assert.That(output, Does.Contain("session closed"));
+        Assert.That(Regex.IsMatch(output, "\x1b"), Is.False,
+            "redirected interactive output must not contain ANSI escape codes");
     }
 
     [Test]
@@ -76,7 +104,7 @@ internal sealed class CliSmokeTests
         Assert.That(error, Is.Empty);
         Assert.That(output, Does.Contain("not found: 'nosuchtrack'"));
         Assert.That(output, Does.Contain("use --list to see what actually exists"));
-        Assert.That(output, Does.Contain("\x1b[0m"));
+        Assert.That(Regex.IsMatch(output, "\x1b"), Is.False);
     }
 
     [Test]
@@ -88,7 +116,7 @@ internal sealed class CliSmokeTests
         Assert.That(error, Is.Empty);
         Assert.That(output, Does.Contain("no tracks specified"));
         Assert.That(output, Does.Contain("try --list"));
-        Assert.That(output, Does.Contain("\x1b[0m"));
+        Assert.That(Regex.IsMatch(output, "\x1b"), Is.False);
     }
 
     private static string NormalizeNewlines(string text) => text.Replace("\r\n", "\n");

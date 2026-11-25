@@ -65,4 +65,3 @@
   │  [!] access : Administrator rights required for port I/O               │
   ╘════════════════════════════════════════════════════════════════════════╛
 
-[0m
