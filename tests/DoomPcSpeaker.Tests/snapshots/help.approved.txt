@@ -43,11 +43,11 @@
   ║  Ctrl+C       :: stop playback/queue; if idle, exit the app            ║
   ╠═◆ COMMANDS ◆═══════════════════════════════════════════════════════════╣
   ║  random       :: play a random track (aliases: random, r)              ║
-  ║  list         :: show tracklist (aliases: list, l)                     ║
-  ║  help         :: show this help (aliases: help, h)                     ║
-  ║  clear        :: clear screen (aliases: clear, c)                      ║
-  ║  stop         :: silence speaker (aliases: stop, s)                    ║
-  ║  quit         :: quit the app (aliases: quit, q)                       ║
+  ║  /list        :: show tracklist (aliases: /l)                          ║
+  ║  /help        :: show this help (aliases: /h)                          ║
+  ║  /clear       :: clear screen (aliases: /c)                            ║
+  ║  /stop        :: silence speaker (aliases: /s)                         ║
+  ║  /quit        :: quit the app (aliases: /q)                            ║
   ╚════════════════════════════════════════════════════════════════════════╝
 
   ┌─▸ EXAMPLES ◂───────────────────────────────────────────────────────────┐

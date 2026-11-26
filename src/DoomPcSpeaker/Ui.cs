@@ -24,12 +24,12 @@ static class Ui
                 PrintBanner(compact: true, availabilityError, playing: playing);
                 if (availabilityError is null)
                 {
-                    Dim("  [SYS] type 'help' for commands and usage");
+                    Dim("  [SYS] type '/help' for commands and usage");
                 }
                 else
                 {
                     Dim("  [SYS] mode   :: playback disabled / read-only, look but no beep");
-                    Dim("  [SYS] allow  :: list  help  clear  stop  quit");
+                    Dim("  [SYS] allow  :: /list  /help  /clear  /stop  /quit");
                     Dim("  [SYS] action :: fix driver/access and restart (you got this)");
                 }
                 break;
@@ -120,7 +120,7 @@ static class Ui
             DBoxSep();
             DBoxRow("input", "id / key (type like you mean it)", ConsoleColor.White);
             DBoxRow("queue", "separate tracks with ',' ';' or space (go wild)", ConsoleColor.White);
-            DBoxRow("cmds", "list, help, clear, stop, quit, random", ConsoleColor.DarkGray);
+            DBoxRow("cmds", "/list, /help, /clear, /stop, /quit, random", ConsoleColor.DarkGray);
             DBoxRow("abort", "Ctrl+C stops playback/queue (panic button, session lives)", ConsoleColor.Red);
         }
 
@@ -235,11 +235,11 @@ static class Ui
             writer.Kv("Ctrl+C", "stop playback/queue; if idle, exit the app");
             writer.Section("COMMANDS", ConsoleColor.DarkCyan);
             writer.Kv("random", "play a random track (aliases: random, r)");
-            writer.Kv("list", "show tracklist (aliases: list, l)");
-            writer.Kv("help", "show this help (aliases: help, h)");
-            writer.Kv("clear", "clear screen (aliases: clear, c)");
-            writer.Kv("stop", "silence speaker (aliases: stop, s)");
-            writer.Kv("quit", "quit the app (aliases: quit, q)");
+            writer.Kv("/list", "show tracklist (aliases: /l)");
+            writer.Kv("/help", "show this help (aliases: /h)");
+            writer.Kv("/clear", "clear screen (aliases: /c)");
+            writer.Kv("/stop", "silence speaker (aliases: /s)");
+            writer.Kv("/quit", "quit the app (aliases: /q)");
         });
         Console.WriteLine();
 
@@ -286,7 +286,7 @@ static class Ui
             Write(ConsoleColor.Gray, "]─[");
             Write(ConsoleColor.Red, "INPUT:LOCKED");
             Write(ConsoleColor.Gray, "]─[");
-            Write(ConsoleColor.Yellow, "list/help/clear/stop/quit");
+            Write(ConsoleColor.Yellow, "/list /help /clear /stop /quit");
             WriteLine(ConsoleColor.Gray, "]");
 
             Write(ConsoleColor.Gray, Prefix + "╰─");

@@ -121,9 +121,6 @@ static class App
             if (line is null) break;
 
             string input = line.Trim();
-            if (input.StartsWith('/'))
-                input = input[1..].TrimStart();
-
             if (input.Length == 0)
                 continue;
 
@@ -173,7 +170,7 @@ static class App
                 if (Melodies.All.Length == 0 && errors.Any(Melodies.IsRandom))
                     status = "no tracks loaded — add .dpsm files to melodies/";
                 else
-                    status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  nice try, use 'help'";
+                    status = "not found: " + string.Join(", ", errors.Select(e => "'" + e + "'")) + "  ::  nice try, use '/help'";
                 statusOk = false;
                 continue;
             }

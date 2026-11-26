@@ -18,16 +18,27 @@ internal sealed class CommandsTests
         Assert.That(Commands.MatchArgument(argument), Is.EqualTo(expected));
     }
 
-    [TestCase("help", Command.Help)]
-    [TestCase("H", Command.Help)]
-    [TestCase("list", Command.List)]
-    [TestCase("l", Command.List)]
-    [TestCase("stop", Command.Stop)]
-    [TestCase("s", Command.Stop)]
-    [TestCase("clear", Command.Clear)]
-    [TestCase("c", Command.Clear)]
-    [TestCase("quit", Command.Quit)]
-    [TestCase("q", Command.Quit)]
+    [TestCase("/help", Command.Help)]
+    [TestCase("/H", Command.Help)]
+    [TestCase("/list", Command.List)]
+    [TestCase("/l", Command.List)]
+    [TestCase("/stop", Command.Stop)]
+    [TestCase("/s", Command.Stop)]
+    [TestCase("/clear", Command.Clear)]
+    [TestCase("/c", Command.Clear)]
+    [TestCase("/quit", Command.Quit)]
+    [TestCase("/q", Command.Quit)]
+    [TestCase("help", Command.Unknown)]
+    [TestCase("list", Command.Unknown)]
+    [TestCase("clear", Command.Unknown)]
+    [TestCase("stop", Command.Unknown)]
+    [TestCase("quit", Command.Unknown)]
+    [TestCase("h", Command.Unknown)]
+    [TestCase("l", Command.Unknown)]
+    [TestCase("c", Command.Unknown)]
+    [TestCase("s", Command.Unknown)]
+    [TestCase("q", Command.Unknown)]
+    [TestCase("nokia", Command.Unknown)]
     [TestCase("--list", Command.Unknown)]
     [TestCase("random", Command.Unknown)]
     public void MatchInteractive_returns_expected_command(string input, Command expected)
@@ -89,6 +100,8 @@ internal sealed class CommandsTests
         Assert.That(locked.Select(s => s.Name), Does.Contain("quit"));
         Assert.That(unlocked.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
         Assert.That(locked.All(s => !string.IsNullOrWhiteSpace(s.Description)), Is.True);
+        Assert.That(locked.All(s => Commands.MatchInteractive("/" + s.Name) != Command.Unknown), Is.True);
+        Assert.That(unlocked.All(s => Commands.MatchInteractive(s.Name) == Command.Unknown), Is.True);
     }
 
     [Test]

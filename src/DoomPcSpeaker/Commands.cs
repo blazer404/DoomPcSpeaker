@@ -26,11 +26,11 @@ internal static class Commands
 
     private static readonly (string[] Names, Command Command)[] InteractiveCommands =
     [
-        (["help", "h"], Command.Help),
-        (["list", "l"], Command.List),
-        (["stop", "s"], Command.Stop),
-        (["clear", "c"], Command.Clear),
-        (["quit", "q"], Command.Quit),
+        (["/help", "/h"], Command.Help),
+        (["/list", "/l"], Command.List),
+        (["/stop", "/s"], Command.Stop),
+        (["/clear", "/c"], Command.Clear),
+        (["/quit", "/q"], Command.Quit),
     ];
 
     private static readonly Suggestion[] UnlockedSuggestions =
