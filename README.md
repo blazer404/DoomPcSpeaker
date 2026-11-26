@@ -107,3 +107,65 @@ dotnet publish .\src\DoomPcSpeaker\DoomPcSpeaker.csproj -c Release -o .\publish
 Публикация framework-dependent: нужен .NET 9 Runtime. Вместе с exe копируются `inpoutx64.dll` и `melodies\`. Код возврата: `0` — успех, `1` — ошибка.
 
 Версия берётся из `version.txt` в корне репозитория. Измените её перед сборкой или публикацией — номер попадёт в свойства exe и появится в баннере и справке.
+
+## Публикация
+
+Приложение публикуется framework-dependent: на целевом компьютере нужен .NET 9 Runtime. Параметры Release зафиксированы в `src/DoomPcSpeaker/DoomPcSpeaker.csproj`: `SelfContained=false`, `PublishReadyToRun=false`, `PublishTrimmed=false`, `PublishSingleFile=false`.
+
+### Зависимости
+
+| Зависимость | Источник | Комментарий |
+| -------------------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `inpoutx64.dll`                  | `res/libs/inpout/`                    | vendor-библиотека для портового I/O (`0x43/0x42/0x61`); альтернативы нет. |
+| `System.Text.Json`               | входит в .NET 9 Runtime               | отдельной DLL в дистрибутиве не поставляется.                            |
+| NuGet-пакеты                     | —                                     | у приложения их нет; тестовые пакеты в дистрибутив не попадают.          |
+
+### Варианты публикации
+
+Замеры выполнены для свежей публикации в отдельный каталог.
+
+| Вариант | Конфигурация | Результат | Итого | Файлов | Холодный запуск |
+| ------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------: | -----: | --------------: |
+| A       | текущая: framework-dependent, `PublishReadyToRun=false`                        | работает; `--help`/`--list` совпадают со снапшотами, `--badflag` даёт код `1`, stderr пустой | 472 950 B (EXE 219 136 B, DLL 221 184 B) | 29 | медиана 63,34 мс |
+| B       | `SelfContained=false` + `PublishTrimmed=true`, `TrimMode=full`                 | ошибка `NETSDK1102`: trimming framework-dependent не поддерживается .NET 9                  | —                 | —      | —               |
+| C       | B + `PublishSingleFile=true`                                                   | ошибка `NETSDK1102`                                                                        | —                 | —      | —               |
+| D       | `SelfContained=false` + `PublishSingleFile=true` + `EnableCompressionInSingleFile=true` | ошибка `NETSDK1176`: сжатие только для self-contained                                | —                 | —      | —               |
+| Dprime  | `SelfContained=false` + `PublishSingleFile=true`, без сжатия                   | работает, но на 1 791 B больше варианта A                                                  | 474 741 B         | 26     | —               |
+| Bsc     | self-contained + trimming                                                      | работает без предупреждений trimming, но неприемлемо велик и медленнее                     | 20 759 699 B      | 57     | 147,89 мс       |
+
+### Итог: до и после
+
+| Показатель      | До        | После     |
+| --------------- | --------- | --------- |
+| EXE             | 219 136 B | 219 136 B |
+| Общий размер    | 472 950 B | 472 950 B |
+| Файлов          | 29        | 29        |
+| Холодный запуск | ~63 мс    | ~63 мс    |
+
+Уменьшить размер без потери функциональности не удалось: приложение уже на практическом минимуме. Доступные варианты либо не собираются (`NETSDK1102`, `NETSDK1176`), либо увеличивают дистрибутив (`Dprime`, `Bsc`).
+
+### Обязательные файлы дистрибутива
+
+- `DoomPcSpeaker.exe`
+- `DoomPcSpeaker.dll`
+- `inpoutx64.dll`
+- `melodies\*.dpsm`
+- `DoomPcSpeaker.deps.json`
+- `DoomPcSpeaker.runtimeconfig.json`
+
+`melodies\` редактируется пользователем: свои `.dpsm` можно добавить без пересборки, поэтому папка не встраивается в EXE. `inpoutx64.dll` и `melodies\` должны лежать рядом с exe.
+
+### Команды публикации и проверки
+
+```powershell
+dotnet publish .\src\DoomPcSpeaker\DoomPcSpeaker.csproj -c Release -o .\publish
+dotnet build .\DoomPcSpeaker.sln -c Debug
+dotnet test .\DoomPcSpeaker.sln -c Debug
+(Get-ChildItem .\publish -Recurse -File).Count
+(Get-ChildItem .\publish -Recurse -File | Measure-Object -Property Length -Sum).Sum
+(Get-Item .\publish\DoomPcSpeaker.exe).Length
+.\publish\DoomPcSpeaker.exe --help
+.\publish\DoomPcSpeaker.exe --list
+```
+
+Контрольные значения для свежей публикации: 29 файлов, 472 950 B всего, 219 136 B exe.
