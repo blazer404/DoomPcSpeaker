@@ -114,6 +114,56 @@ internal sealed class MelodiesTests
     }
 
     [Test]
+    public void Resolve_ignores_key_case()
+    {
+        Assert.That(CreateCatalog().Resolve("dOoM")!.Key, Is.EqualTo("doom"));
+    }
+
+    [Test]
+    public void Resolve_trims_leading_and_trailing_whitespace()
+    {
+        Assert.That(CreateCatalog().Resolve("  tetris  ")!.Key, Is.EqualTo("tetris"));
+    }
+
+    [Test]
+    public void Resolve_returns_null_for_empty_and_whitespace_only_query()
+    {
+        var catalog = CreateCatalog();
+
+        Assert.That(catalog.Resolve(string.Empty), Is.Null);
+        Assert.That(catalog.Resolve(" \t "), Is.Null);
+    }
+
+    [Test]
+    public void Resolve_random_aliases_return_song_from_non_empty_catalog()
+    {
+        var catalog = CreateCatalog();
+
+        Assert.That(catalog.All, Does.Contain(catalog.Resolve("  RaNdOm  ")));
+        Assert.That(catalog.All, Does.Contain(catalog.Resolve(" R ")));
+    }
+
+    [Test]
+    public void Resolve_random_aliases_return_null_for_empty_catalog()
+    {
+        var catalog = new MelodyCatalog([]);
+
+        Assert.That(catalog.Resolve("random"), Is.Null);
+        Assert.That(catalog.Resolve("r"), Is.Null);
+    }
+
+    [Test]
+    public void Resolve_case_insensitive_duplicate_key_returns_first_added_song()
+    {
+        var first = new Melodies.Song("doom", "First", "Games", [(440, 100)]);
+        var second = new Melodies.Song("DOOM", "Second", "Games", [(220, 100)]);
+        var catalog = new MelodyCatalog([first, second]);
+
+        Assert.That(catalog.Resolve("doom"), Is.SameAs(first));
+        Assert.That(catalog.Resolve("DOOM"), Is.SameAs(first));
+    }
+
+    [Test]
     public void Catalog_groups_tracks_by_name()
     {
         var catalog = CreateCatalog();
