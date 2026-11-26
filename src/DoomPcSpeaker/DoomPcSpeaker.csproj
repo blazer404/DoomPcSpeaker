@@ -13,6 +13,13 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <!-- Trimming/single-file/сжатие не применяются: framework-dependent trimming не поддерживается .NET 9 (NETSDK1102),
+         single-file не уменьшает общий размер, сжатие требует self-contained (NETSDK1176);
+         melodies\ и inpoutx64.dll поставляются отдельно. -->
+    <SelfContained>false</SelfContained>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
