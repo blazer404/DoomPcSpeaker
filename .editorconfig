@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{csproj,props,targets,config,nuspec,json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# AGENTS.md: PascalCase for types, methods and properties.
+dotnet_naming_rule.pascal_case_symbols.severity = suggestion
+dotnet_naming_rule.pascal_case_symbols.symbols = pascal_case_symbols
+dotnet_naming_rule.pascal_case_symbols.style = pascal_case
+
+dotnet_naming_symbols.pascal_case_symbols.applicable_kinds = class,struct,interface,enum,delegate,method,property,event,namespace
+dotnet_naming_symbols.pascal_case_symbols.applicable_accessibilities = *
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
