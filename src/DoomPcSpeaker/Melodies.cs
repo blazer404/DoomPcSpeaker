@@ -271,9 +271,14 @@ static class Melodies
 
 internal sealed class MelodyCatalog
 {
+    private readonly Dictionary<string, Melodies.Song> _byKey = new(StringComparer.OrdinalIgnoreCase);
+
     public MelodyCatalog(IEnumerable<Melodies.Song> songs)
     {
         All = songs.ToArray();
+        foreach (var song in All)
+            _byKey.TryAdd(song.Key, song);
+
         Groups = All
             .GroupBy(song => song.Group, StringComparer.OrdinalIgnoreCase)
             .Select(group => new Melodies.Group(group.First().Group, group.ToArray()))
@@ -291,6 +296,6 @@ internal sealed class MelodyCatalog
         if (Melodies.IsRandom(normalized))
             return All.Length == 0 ? null : All[Random.Shared.Next(All.Length)];
 
-        return Array.Find(All, song => song.Key.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+        return _byKey.TryGetValue(normalized, out var song) ? song : null;
     }
 }
