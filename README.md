@@ -91,6 +91,10 @@
 | `not found: 'name'`                   | выполните `--list` и возьмите ключ оттуда      |
 | тишина при играющем треке             | проверьте PC speaker в BIOS/UEFI               |
 
+## Структура исходников
+
+`src/DoomPcSpeaker/`: `Program.cs`, `App.cs`, `Commands.cs`, `Playback.cs`, `PcSpeaker.cs`, `Terminal.cs`, `ConsoleBuffer.cs`, `Ui.cs`, `Melodies.cs` (содержит `MelodyCatalog`), `AppVersion.cs`.
+
 ## Сборка и тесты
 
 ```powershell
