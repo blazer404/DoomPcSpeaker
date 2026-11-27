@@ -13,7 +13,7 @@
   │ MODE ▸ INTERACTIVE/CLI            │  PORT ▸ 0x43/0x42/0x61             │
   ╰────────────────────────────────────────────────────────────────────────╯
 
-  ░▒▓[ v1.0.0.0  //  status=ready  //  tracks=24 loaded  //  mode=co... ]▓▒░
+  ░▒▓[ v1.1.0.0  //  status=ready  //  tracks=24 loaded  //  mode=co... ]▓▒░
 
   ╔═◢ DEVICE INFO ◣════════════════════════════════════════════════════════╗
   ║ app       ▸ PC speaker hardware jukebox (yes, that beep thing)         ║
@@ -33,7 +33,7 @@
   ┃  DoomPcSpeaker.exe -l, --list   :: print full track database           ┃
   ┃  DoomPcSpeaker.exe -s, --stop   :: mute speaker / clear port state     ┃
   ┃  DoomPcSpeaker.exe -h, --help   :: show this help                      ┃
-  ┃  version                        :: 1.0.0.0                             ┃
+  ┃  version                        :: 1.1.0.0                             ┃
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
   ╔═◢ CONTROLS ◣═══════════════════════════════════════════════════════════╗
